@@ -6,6 +6,7 @@
   version="3.1">
     <display-name>IntelliRec</display-name>
     
+    <!-- 
     <servlet>
         <servlet-name>RecommendationServlet</servlet-name>
         <servlet-class>com.intellirec.servlet.RecommendationServlet</servlet-class>
@@ -14,6 +15,7 @@
         <servlet-name>RecommendationServlet</servlet-name>
         <url-pattern>/getRecommendations</url-pattern>
     </servlet-mapping>
+    -->
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>
