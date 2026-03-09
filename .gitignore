@@ -1,0 +1,37 @@
+# Compiled Java class files
+*.class
+
+# Log files
+*.log
+
+# IDE files
+.idea/
+*.iml
+*.ipr
+*.iws
+.eclipse/
+.settings/
+.project
+.classpath
+
+# VS Code
+.vscode/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Maven / Gradle
+target/
+build/
+*.war
+*.ear
+*.jar
+!src/main/webapp/WEB-INF/lib/*.jar
+
+# Tomcat
+tomcat_boot.log
+tomcat_run.log
+
+# Environment / secrets (keep firebase-config.js tracked unless it has secrets)
+*.env
