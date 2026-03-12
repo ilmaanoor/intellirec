@@ -5,7 +5,7 @@
 
 const API_CONFIG = {
     // IMPORTANT: Get your TMDB API Key from https://www.themoviedb.org/settings/api
-    TMDB_API_KEY: 'YOUR_TMDB_API_KEY_HERE',
+    TMDB_API_KEY: 'e226f4a5f5bace766952aa0d17182959',
     TMDB_BASE_URL: 'https://api.themoviedb.org/3',
     NETFLIX_PROVIDER_ID: 8,
     SPOTIFY_CLIENT_ID: 'YOUR_SPOTIFY_CLIENT_ID',
