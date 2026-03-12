@@ -4,8 +4,10 @@
  */
 
 const API_CONFIG = {
-    // These would be replaced with actual API keys in a production environment
-    NETFLIX_SIMULATED: true,
+    // IMPORTANT: Get your TMDB API Key from https://www.themoviedb.org/settings/api
+    TMDB_API_KEY: 'YOUR_TMDB_API_KEY_HERE',
+    TMDB_BASE_URL: 'https://api.themoviedb.org/3',
+    NETFLIX_PROVIDER_ID: 8,
     SPOTIFY_CLIENT_ID: 'YOUR_SPOTIFY_CLIENT_ID',
     AMAZON_PARTNER_TAG: 'YOUR_AMAZON_TAG',
     TRIPADVISOR_API_KEY: 'YOUR_TRIPADVISOR_KEY'
@@ -18,18 +20,64 @@ const ApiClient = {
      * @param {string} language 
      */
     async getMovies(genre = 'All', language = 'English') {
-        console.log(`Fetching ${genre} movies in ${language}...`);
-        // Simulating Netflix-style API response
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve([
-                    { id: 1, title: 'Stranger Things', genre: 'Sci-Fi', rating: 4.8, img: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop' },
-                    { id: 2, title: 'Extraction 2', genre: 'Action', rating: 4.5, img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop' },
-                    { id: 3, title: 'The Witcher', genre: 'Fantasy', rating: 4.7, img: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=400&h=600&fit=crop' },
-                    { id: 4, title: 'Money Heist', genre: 'Crime', rating: 4.9, img: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop' }
-                ]);
-            }, 100);
-        });
+        if (API_CONFIG.TMDB_API_KEY === 'YOUR_TMDB_API_KEY_HERE') {
+            console.warn('TMDB API Key missing. Falling back to simulation.');
+            return this._getSimulatedMovies(genre);
+        }
+
+        const genreMap = {
+            'Action': 28, 'Sci-Fi': 878, 'Comedy': 35, 'Drama': 18, 'Fantasy': 14, 'Thriller': 53
+        };
+
+        const langMap = {
+            'English': 'en-US', 'Hindi': 'hi-IN', 'Tamil': 'ta-IN', 'Telugu': 'te-IN', 'Korean': 'ko-KR'
+        };
+
+        const genreId = genreMap[genre] || '';
+        const langCode = langMap[language] || 'en-US';
+
+        console.log(`Fetching real-time ${genre} movies in ${language} from TMDB...`);
+
+        try {
+            const url = new URL(`${API_CONFIG.TMDB_BASE_URL}/discover/movie`);
+            url.search = new URLSearchParams({
+                api_key: API_CONFIG.TMDB_API_KEY,
+                language: langCode,
+                sort_by: 'popularity.desc',
+                with_genres: genreId,
+                with_watch_providers: API_CONFIG.NETFLIX_PROVIDER_ID,
+                watch_region: 'IN', // Defaulting to IN for wide range of languages requested
+                'vote_count.gte': 100 // Quality filter
+            }).toString();
+
+            const response = await fetch(url);
+            const data = await response.json();
+
+            if (!data.results) return this._getSimulatedMovies(genre);
+
+            return data.results.slice(0, 12).map(m => ({
+                id: m.id,
+                title: m.title,
+                genre: genre, // Map back to selected genre for UI
+                rating: m.vote_average.toFixed(1),
+                img: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
+            }));
+        } catch (err) {
+            console.error('TMDB Fetch Error:', err);
+            return this._getSimulatedMovies(genre);
+        }
+    },
+
+    /**
+     * Internal simulation fallback if API key is missing
+     */
+    async _getSimulatedMovies(genre) {
+        return [
+            { id: 1, title: 'Stranger Things', genre: genre, rating: 4.8, img: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop' },
+            { id: 2, title: 'Extraction 2', genre: genre, rating: 4.5, img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop' },
+            { id: 3, title: 'The Witcher', genre: genre, rating: 4.7, img: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=400&h=600&fit=crop' },
+            { id: 4, title: 'Money Heist', genre: genre, rating: 4.9, img: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop' }
+        ];
     },
 
     /**
