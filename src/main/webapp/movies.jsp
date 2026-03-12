@@ -179,7 +179,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
+    <script src="js/api.js?v=9.9"></script>
     <script>
         // User Sync
         firebase.auth().onAuthStateChanged((user) => {
@@ -200,10 +200,14 @@
                 const movies = await ApiClient.getMovies(genre, lang);
                 grid.innerHTML = '';
                 
-                if (movies.length === 0) {
+                if (!movies || movies.length === 0) {
                     grid.innerHTML = '<div class="loading-state">No matching movies found on Netflix right now. Try another genre!</div>';
                     return;
                 }
+
+                // Show if data is simulation by checking if ID is small (1, 2, 3)
+                const isSimulation = movies[0] && movies[0].id < 10;
+                const sourceBadge = isSimulation ? '<span style="color: #ff9800; font-size: 11px;">[SIMULATED]</span>' : '<span style="color: #4caf50; font-size: 11px;">[LIVE]</span>';
 
                 movies.forEach(movie => {
                     const card = document.createElement('div');
@@ -211,7 +215,7 @@
                     card.innerHTML = `
                         <img src="\${movie.img}" alt="\${movie.title}" class="movie-thumb" onerror="this.src='https://via.placeholder.com/400x600?text=No+Image'">
                         <div class="movie-meta">
-                            <span class="movie-tag">Netflix Choice</span>
+                            <span class="movie-tag">Netflix Choice \${sourceBadge}</span>
                             <h3 class="movie-title">\${movie.title}</h3>
                             <div class="movie-footer">
                                 <span>\${movie.genre}</span>

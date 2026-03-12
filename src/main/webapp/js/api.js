@@ -20,7 +20,8 @@ const ApiClient = {
      * @param {string} language 
      */
     async getMovies(genre = 'All', language = 'English') {
-        if (API_CONFIG.TMDB_API_KEY === 'YOUR_TMDB_API_KEY_HERE') {
+        console.log('TMDB Key Check:', API_CONFIG.TMDB_API_KEY);
+        if (API_CONFIG.TMDB_API_KEY === 'YOUR_TMDB_API_KEY_HERE' || !API_CONFIG.TMDB_API_KEY) {
             console.warn('TMDB API Key missing. Falling back to simulation.');
             return this._getSimulatedMovies(genre);
         }
@@ -74,6 +75,8 @@ const ApiClient = {
             }));
         } catch (err) {
             console.error('TMDB Fetch Error:', err);
+            // Alerting user for live debugging
+            alert('IntelliRec Debug: Movie Fetch Failed! Error: ' + err.message + '. Check browser console (F12) for details.');
             return this._getSimulatedMovies(genre);
         }
     },
