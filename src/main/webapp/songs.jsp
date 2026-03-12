@@ -99,12 +99,12 @@
         <p>Real-time top hits based on language and mood.</p>
     </div>
 
-    <div class="filter-section" style="max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
-        <div style="display: flex; gap: 20px;">
+    <div class="filter-section" style="max-width: 900px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; gap: 20px; align-items: flex-end;">
             <div class="filter-group" style="flex: 1;">
                 <label>Select Language</label>
                 <select id="language-filter" class="form-control">
-                    <option value="English">English (Global Top)</option>
+                    <option value="English">English (Global Pop)</option>
                     <option value="Hindi">Hindi (Bollywood)</option>
                     <option value="Korean">Korean (K-Pop)</option>
                     <option value="Spanish">Spanish (Latin)</option>
@@ -120,6 +120,13 @@
                     <option value="Workout">Workout Energy</option>
                     <option value="Romantic">Romantic</option>
                 </select>
+            </div>
+            <div class="filter-group" style="flex: 1.2;">
+                <label>Optional: specific Artist</label>
+                <div style="position: relative;">
+                    <input type="text" id="artist-search" class="form-control" placeholder="e.g. Taylor Swift" style="padding-left: 35px;">
+                    <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.5;" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                </div>
             </div>
         </div>
     </div>
@@ -175,11 +182,12 @@
             const grid = document.getElementById('song-grid');
             const language = document.getElementById('language-filter').value;
             const mood = document.getElementById('mood-filter').value;
+            const artist = document.getElementById('artist-search').value;
 
             grid.innerHTML = '<div class="loading-state">Tuning your frequency...</div>';
 
             try {
-                let songs = await ApiClient.getSongs(language, mood);
+                let songs = await ApiClient.getSongs(language, mood, artist);
 
                 grid.innerHTML = '';
                 
@@ -214,9 +222,18 @@
             }
         }
 
+        function debounce(func, timeout = 500) {
+            let timer;
+            return (...args) => {
+                clearTimeout(timer);
+                timer = setTimeout(() => { func.apply(this, args); }, timeout);
+            };
+        }
+
         // Event Listeners
         document.getElementById('mood-filter').addEventListener('change', loadSongs);
         document.getElementById('language-filter').addEventListener('change', loadSongs);
+        document.getElementById('artist-search').addEventListener('input', debounce(loadSongs));
 
         // Add Play Button Style
         const playerStyle = document.createElement('style');

@@ -155,9 +155,9 @@ const ApiClient = {
     },
 
     /**
-     * Fetch Top/Trending Songs based on Language & Mood using iTunes API (Zero Config Real-Time)
+     * Fetch Top/Trending Songs based on Language & Mood, or specific Artist using iTunes API
      */
-    async getSongs(language = 'English', mood = 'Happy') {
+    async getSongs(language = 'English', mood = 'Happy', artist = '') {
         // Highly targeted search queries for every combination to ensure results and top hits
         const queryMap = {
             'English': {
@@ -197,10 +197,15 @@ const ApiClient = {
             }
         };
 
-        // Fallback to a generic query if somehow not mapped
-        const safeLanguage = queryMap[language] ? language : 'English';
-        const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
-        const query = queryMap[safeLanguage][safeMood];
+        let query;
+        if (artist && artist.trim() !== '') {
+            query = `${artist.trim()} top hits best`;
+        } else {
+            // Fallback to a generic query if somehow not mapped
+            const safeLanguage = queryMap[language] ? language : 'English';
+            const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
+            query = queryMap[safeLanguage][safeMood];
+        }
 
         const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=12`;
         const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
