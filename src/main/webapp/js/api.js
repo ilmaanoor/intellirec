@@ -6,7 +6,8 @@
 const API_CONFIG = {
     // IMPORTANT: Get your TMDB API Key from https://www.themoviedb.org/settings/api
     TMDB_API_KEY: 'e226f4a5f5bace766952aa0d17182959',
-    TMDB_BASE_URL: 'https://api.themoviedb.org/3',
+    TMDB_BASE_URL: 'https://api.tmdb.org/3', // Unblocked mirror for India
+    IMAGE_BASE_URL: 'https://images.weserv.nl/?url=https://image.tmdb.org/t/p/w500', // Unblocked image proxy
     NETFLIX_PROVIDER_ID: 8,
     SPOTIFY_CLIENT_ID: 'YOUR_SPOTIFY_CLIENT_ID',
     AMAZON_PARTNER_TAG: 'YOUR_AMAZON_TAG',
@@ -57,7 +58,10 @@ const ApiClient = {
             console.log(`TMDB Request: ${url.toString()}`);
 
             const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `HTTP ${response.status}`);
+            }
             
             const data = await response.json();
             console.log('TMDB Response:', data);
@@ -72,26 +76,20 @@ const ApiClient = {
                 title: m.title,
                 genre: genre,
                 rating: m.vote_average.toFixed(1),
-                img: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
+                img: m.poster_path ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
             }));
         } catch (err) {
-            console.error('TMDB Fetch Error:', err);
-            // Alerting user for live debugging
-            alert('IntelliRec Debug: Movie Fetch Failed! Error: ' + err.message + '. Check browser console (F12) for details.');
-            return this._getSimulatedMovies(genre);
+            console.error('TMDB Mirror Error:', err);
+            // Returning empty to allow UI to handle it gracefully
+            return [];
         }
     },
 
     /**
-     * Internal simulation fallback if API key is missing
+     * Simulation removed to prioritize requested Real-Time link
      */
     async _getSimulatedMovies(genre) {
-        return [
-            { id: 1, title: 'Stranger Things', genre: genre, rating: 4.8, img: 'https://images.unsplash.com/photo-1626814026160-2237a95fc5a0?w=400&h=600&fit=crop' },
-            { id: 2, title: 'Extraction 2', genre: genre, rating: 4.5, img: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=600&fit=crop' },
-            { id: 3, title: 'The Witcher', genre: genre, rating: 4.7, img: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c?w=400&h=600&fit=crop' },
-            { id: 4, title: 'Money Heist', genre: genre, rating: 4.9, img: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?w=400&h=600&fit=crop' }
-        ];
+        return [];
     },
 
     /**

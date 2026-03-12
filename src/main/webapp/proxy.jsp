@@ -36,7 +36,10 @@
         }
     } catch (Exception e) {
         response.setStatus(500);
-        out.print("{\"error\": \"Proxy failed: " + e.getMessage() + "\"}");
+        StringWriter sw = new StringWriter();
+        e.printStackTrace(new PrintWriter(sw));
+        String fullError = e.getClass().getName() + ": " + e.getMessage();
+        out.print("{\"error\": \"Proxy failed: " + fullError.replace("\"", "\\\"") + "\"}");
     } finally {
         if (connection != null) {
             connection.disconnect();

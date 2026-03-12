@@ -179,7 +179,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=9.9"></script>
+    <script src="js/api.js?v=11.5"></script>
     <script>
         // User Sync
         firebase.auth().onAuthStateChanged((user) => {
@@ -205,9 +205,8 @@
                     return;
                 }
 
-                // Show if data is simulation by checking if ID is small (1, 2, 3)
-                const isSimulation = movies[0] && movies[0].id < 10;
-                const sourceBadge = isSimulation ? '<span style="color: #ff9800; font-size: 11px;">[SIMULATED]</span>' : '<span style="color: #4caf50; font-size: 11px;">[LIVE]</span>';
+                // Real-Time Mirror Status
+                const sourceBadge = '<span style="color: #4caf50; font-size: 11px; font-weight: bold;">[REAL TIME]</span>';
 
                 movies.forEach(movie => {
                     const card = document.createElement('div');
