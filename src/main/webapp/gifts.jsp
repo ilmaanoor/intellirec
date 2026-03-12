@@ -156,9 +156,11 @@
                 gifts.forEach(gift => {
                     const card = document.createElement('div');
                     card.className = 'gift-card';
+                    const sourceBadge = '<span style="color: #FF9900; font-size: 10px; font-weight: bold;">[REAL TIME]</span>';
+                    
                     card.innerHTML = `
                         <img src="\${gift.img}" alt="\${gift.name}" class="gift-thumb">
-                        <span class="amazon-tag">AMAZON CHOICE</span>
+                        <span class="amazon-tag">AMAZON CHOICE \${sourceBadge}</span>
                         <div class="gift-name">\${gift.name}</div>
                         <div style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">\${gift.category}</div>
                         <div class="gift-price">\${gift.price}</div>

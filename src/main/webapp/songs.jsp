@@ -95,70 +95,142 @@
     </nav>
 
     <div class="page-header">
-        <h1>Spotify Playlists</h1>
-        <p>AI-curated music perfectly synchronized with your mood.</p>
+        <h1>Music Discovery</h1>
+        <p>Real-time top hits based on language and mood.</p>
     </div>
 
-    <div class="filter-section">
-        <div class="filter-group">
-            <label>Whats your Mood?</label>
-            <select id="mood-filter" class="form-control">
-                <option value="Happy">Happy & Upbeat</option>
-                <option value="Chill">Chill & Acoustic</option>
-                <option value="Focus">Focus & Study</option>
-                <option value="Workout">Workout Energy</option>
-            </select>
+    <div class="filter-section" style="max-width: 800px; display: flex; flex-direction: column; gap: 20px;">
+        <div style="display: flex; gap: 20px;">
+            <div class="filter-group" style="flex: 1;">
+                <label>Select Language</label>
+                <select id="language-filter" class="form-control">
+                    <option value="English">English (Global Top)</option>
+                    <option value="Hindi">Hindi (Bollywood)</option>
+                    <option value="Korean">Korean (K-Pop)</option>
+                    <option value="Spanish">Spanish (Latin)</option>
+                    <option value="Tamil">Tamil</option>
+                </select>
+            </div>
+            <div class="filter-group" style="flex: 1;">
+                <label>Select Mood/Vibe</label>
+                <select id="mood-filter" class="form-control">
+                    <option value="Happy">Happy & Upbeat</option>
+                    <option value="Chill">Chill & Relaxed</option>
+                    <option value="Focus">Focus & Study</option>
+                    <option value="Workout">Workout Energy</option>
+                    <option value="Romantic">Romantic</option>
+                </select>
+            </div>
         </div>
     </div>
 
     <div id="song-grid" class="song-grid">
-        <div class="loading-state">Scanning your vibe...</div>
+        <div class="loading-state">Initializing Audio Engine...</div>
     </div>
 
+    <audio id="global-player" style="display:none;"></audio>
+
     <footer class="footer-site">
-        Powered by IntelliRec AI • Connected to Spotify
+        Powered by IntelliRec AI • Live Music Connection
     </footer>
 
     <script src="js/firebase-app-compat.js"></script>
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
+    <script src="js/api.js?v=2.2"></script>
     <script>
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 const name = user.displayName || user.email.split('@')[0];
-                document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=\${name}`;
+                document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=B9B9B9&color=white&bold=true&name=\${name}`;
             }
         });
 
+        // Global Audio Control
+        const player = document.getElementById('global-player');
+        let currentPlayingBtn = null;
+
+        function togglePreview(url, btn) {
+            if (player.src === url && !player.paused) {
+                player.pause();
+                btn.innerHTML = '▶';
+                return;
+            }
+            
+            if (currentPlayingBtn) currentPlayingBtn.innerHTML = '▶';
+            
+            player.src = url;
+            player.play();
+            btn.innerHTML = '⏸';
+            currentPlayingBtn = btn;
+            
+            player.onended = () => {
+                btn.innerHTML = '▶';
+                currentPlayingBtn = null;
+            };
+        }
+
         async function loadSongs() {
             const grid = document.getElementById('song-grid');
+            const language = document.getElementById('language-filter').value;
             const mood = document.getElementById('mood-filter').value;
 
             grid.innerHTML = '<div class="loading-state">Tuning your frequency...</div>';
 
             try {
-                const songs = await ApiClient.getSongs(mood);
+                let songs = await ApiClient.getSongs(language, mood);
+
                 grid.innerHTML = '';
                 
+                if (songs.length === 0) {
+                    grid.innerHTML = '<div class="loading-state">No tracks found. Check your connection or try different filters.</div>';
+                    return;
+                }
+
                 songs.forEach(song => {
                     const card = document.createElement('div');
                     card.className = 'song-card';
+                    const sourceBadge = '<span style="color: #FF2D55; font-size: 10px; font-weight: bold; background: rgba(255, 45, 85, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid #FF2D55; margin-left: 5px;">TRENDING</span>';
+                    
+                    const previewBtn = song.preview ? 
+                        `<button class="play-btn" onclick="togglePreview('\${song.preview}', this)">▶</button>` : 
+                        `<span style="font-size:10px; opacity:0.5; background: rgba(0,0,0,0.5); padding: 4px; border-radius: 4px; color: white;">No Preview</span>`;
+
                     card.innerHTML = `
-                        <img src="\${song.img}" alt="\${song.album}" class="album-art">
-                        <span class="spotify-tag">SPOTIFY</span>
-                        <div class="song-title">\${song.title}</div>
-                        <div class="artist-name">\${song.artist} • \${song.album}</div>
+                        <div style="position:relative;">
+                            <img src="\${song.img}" alt="\${song.album}" class="album-art">
+                            <div style="position:absolute; bottom:15px; right:15px;">\${previewBtn}</div>
+                        </div>
+                        <span class="spotify-tag" style="background: #FF2D55;">APPLE MUSIC \${sourceBadge}</span>
+                        <div class="song-title" title="\${song.title}">\${song.title}</div>
+                        <div class="artist-name">\${song.artist}</div>
+                        <a href="\${song.url}" target="_blank" style="font-size:11px; color:#FF2D55; text-decoration:none; margin-top:10px; display:inline-block; font-weight:700;">Open Track</a>
                     `;
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = '<div class="loading-state">Connection lost. Please refresh.</div>';
+                grid.innerHTML = '<div class="loading-state">Connection lost. Failed to fetch music.</div>';
             }
         }
 
+        // Event Listeners
         document.getElementById('mood-filter').addEventListener('change', loadSongs);
+        document.getElementById('language-filter').addEventListener('change', loadSongs);
+
+        // Add Play Button Style
+        const playerStyle = document.createElement('style');
+        playerStyle.innerHTML = `
+            .play-btn {
+                width: 35px; height: 35px; border-radius: 50%; background: #1DB954; color: white;
+                border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s;
+            }
+            .play-btn:hover { transform: scale(1.1); background: #1ed760; }
+            .song-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; width: 100%; }
+        `;
+        document.head.appendChild(playerStyle);
+
         loadSongs();
     </script>
 </body>

@@ -15,6 +15,7 @@ const API_CONFIG = {
 };
 
 const ApiClient = {
+    _lastError: null,
     /**
      * Fetch Movie recommendations (Netflix Style)
      * @param {string} genre 
@@ -41,56 +42,91 @@ const ApiClient = {
         console.log(`Fetching real-time ${genre} movies in ${language} from TMDB...`);
 
         try {
-            // Using proxy.jsp to avoid "Failed to fetch" network/CORS issues
             const url = new URL(`${window.location.origin}/intellirec/proxy.jsp`);
-            const params = {
+            const baseParams = {
                 api_key: API_CONFIG.TMDB_API_KEY,
                 language: langCode,
-                sort_by: 'popularity.desc',
-                with_watch_providers: API_CONFIG.NETFLIX_PROVIDER_ID,
-                watch_region: 'IN'
+                sort_by: 'popularity.desc'
             };
+            if (genreId) baseParams.with_genres = genreId;
 
-            if (genreId) params.with_genres = genreId;
+            let finalResults = [];
 
-            url.search = new URLSearchParams(params).toString();
-            console.log(`TMDB Request: ${url.toString()}`);
-
-            const response = await fetch(url);
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `HTTP ${response.status}`);
+            // Stage 1: Try Netflix (India)
+            console.log("Stage 1: Attempting Netflix (India)...");
+            url.search = new URLSearchParams({...baseParams, with_watch_providers: 8, watch_region: 'IN'}).toString();
+            let res = await fetch(url);
+            let rawText = await res.text();
+            let data;
+            try {
+                data = JSON.parse(rawText);
+            } catch (e) {
+                console.error("Stage 1 - Non-JSON response:", rawText.substring(0, 200));
+                this._lastError = "Proxy Error: Received HTML instead of Data. Check Tomcat console.";
+                data = { results: [] };
             }
-            
-            const data = await response.json();
-            console.log('TMDB Response:', data);
+            console.log("Stage 1 Response:", data);
+            if (data.results && data.results.length > 0) finalResults = data.results;
+            if (data.error) this._lastError = "Proxy Error (S1): " + data.error;
 
-            if (!data.results || data.results.length === 0) {
-                console.warn('No Netflix results. Fetching general trending results...');
-                delete params.with_watch_providers;
-                delete params.watch_region;
-                url.search = new URLSearchParams(params).toString();
-                const fallbackResponse = await fetch(url);
-                const fallbackData = await fallbackResponse.json();
-                return (fallbackData.results || []).slice(0, 12).map(m => ({
-                    id: m.id,
-                    title: m.title,
-                    genre: genre,
-                    rating: m.vote_average.toFixed(1),
-                    img: m.poster_path ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
-                }));
+            // Wait 1.5s between stages if results are missing
+            const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+            // Stage 2: Try Netflix (Global)
+            if (finalResults.length < 4) {
+                await sleep(1500);
+                console.log("Stage 2: Attempting Netflix (Global)...");
+                url.search = new URLSearchParams({...baseParams, with_watch_providers: 8}).toString();
+                res = await fetch(url);
+                rawText = await res.text();
+                try {
+                    data = JSON.parse(rawText);
+                } catch (e) {
+                    console.error("Stage 2 - Non-JSON response:", rawText.substring(0, 200));
+                    data = { results: [] };
+                }
+                console.log("Stage 2 Response:", data);
+                if (data.results && data.results.length > 0) {
+                    const newBatch = data.results.filter(nr => !finalResults.some(fr => fr.id === nr.id));
+                    finalResults = [...finalResults, ...newBatch];
+                }
+                if (data.error && finalResults.length === 0) this._lastError = "Proxy Error (S2): " + data.error;
             }
 
-            return data.results.slice(0, 12).map(m => ({
+            // Stage 3: Try All Trending
+            if (finalResults.length === 0) {
+                await sleep(1500);
+                console.log("Stage 3: Attempting All Trending...");
+                url.search = new URLSearchParams(baseParams).toString();
+                res = await fetch(url);
+                rawText = await res.text();
+                try {
+                    data = JSON.parse(rawText);
+                } catch (e) {
+                    console.error("Stage 3 - Non-JSON response:", rawText.substring(0, 200));
+                    data = { results: [] };
+                }
+                console.log("Stage 3 Response:", data);
+                if (data.results) finalResults = data.results;
+                if (data.error) this._lastError = "Proxy Error (S3): " + data.error;
+            }
+
+            if (!finalResults || finalResults.length === 0) {
+                console.warn('No real-time results found across all stages. Last Error:', this._lastError);
+                return [];
+            }
+
+            this._lastError = null; // Clear error on success
+            return finalResults.slice(0, 12).map(m => ({
                 id: m.id,
                 title: m.title,
                 genre: genre,
-                rating: m.vote_average.toFixed(1),
+                rating: (m.vote_average || 0).toFixed(1),
                 img: m.poster_path ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
             }));
         } catch (err) {
-            console.error('TMDB Mirror Error:', err);
-            // Returning empty to allow UI to handle it gracefully
+            console.error('ApiClient.getMovies Exception:', err);
+            this._lastError = "System Exception: " + err.message;
             return [];
         }
     },
@@ -103,55 +139,143 @@ const ApiClient = {
     },
 
     /**
-     * Fetch Song recommendations (Spotify)
-     * @param {string} mood 
+     * Internal: Fetch Spotify Access Token
      */
-    async getSongs(mood = 'Happy') {
-        console.log(`Fetching ${mood} songs from Spotify...`);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve([
-                    { id: 1, title: 'Blinding Lights', artist: 'The Weeknd', album: 'After Hours', img: 'https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?w=300&h=300&fit=crop' },
-                    { id: 2, title: 'Levitating', artist: 'Dua Lipa', album: 'Future Nostalgia', img: 'https://images.unsplash.com/photo-1493225255756-d9584f8606e9?w=300&h=300&fit=crop' },
-                    { id: 3, title: 'Stay', artist: 'The Kid LAROI & Justin Bieber', album: 'F*CK LOVE 3', img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=300&h=300&fit=crop' }
-                ]);
-            }, 100);
-        });
+    async _getSpotifyToken() {
+        try {
+            const res = await fetch(`${window.location.origin}/intellirec/spotify_auth.jsp`);
+            const data = await res.json();
+            if (data.access_token) return data.access_token;
+            console.error('Spotify Token Error:', data.error);
+            return null;
+        } catch (e) {
+            console.error('Spotify Auth Exception:', e);
+            return null;
+        }
     },
 
     /**
-     * Fetch Gift recommendations (Amazon)
+     * Fetch Top/Trending Songs based on Language & Mood using iTunes API (Zero Config Real-Time)
+     */
+    async getSongs(language = 'English', mood = 'Happy') {
+        // Map languages to search keywords
+        const langMap = {
+            'English': 'pop hit',
+            'Hindi': 'bollywood',
+            'Korean': 'k-pop',
+            'Spanish': 'latin',
+            'Tamil': 'tamil'
+        };
+
+        // Map moods to keywords
+        const moodMap = {
+            'Happy': 'happy upbeat',
+            'Chill': 'chill acoustic',
+            'Focus': 'study focus',
+            'Workout': 'workout energy',
+            'Romantic': 'love romance'
+        };
+
+        const langQuery = langMap[language] || language;
+        const moodQuery = moodMap[mood] || mood;
+        
+        // Combine for iTunes search endpoint
+        const query = `${langQuery} ${moodQuery}`;
+        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=12`;
+        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
+
+        console.log(`Searching iTunes for: ${query}...`);
+        try {
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            
+            if (data.results && data.results.length > 0) {
+                return data.results.map(t => ({
+                    id: t.trackId,
+                    title: t.trackName,
+                    artist: t.artistName,
+                    album: t.collectionName,
+                    img: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '300x300bb') : 'https://via.placeholder.com/300?text=No+Cover',
+                    url: t.trackViewUrl,
+                    preview: t.previewUrl
+                }));
+            }
+            return [];
+        } catch (err) {
+            console.error('iTunes API Exception:', err);
+            return [];
+        }
+    },
+
+    /**
+     * Fetch Gift recommendations (DummyJSON)
      * @param {string} recipient 
      * @param {string} occasion 
      */
     async getGifts(recipient = 'Friend', occasion = 'Birthday') {
-        console.log(`Fetching gifts for ${recipient}'s ${occasion}...`);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve([
-                    { id: 1, name: 'Kindle Paperwhite', category: 'Tech', price: '$139.99', img: 'https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=400&fit=crop' },
-                    { id: 2, name: 'Echo Dot (5th Gen)', category: 'Smart Home', price: '$49.99', img: 'https://images.unsplash.com/photo-1589492477829-5e65395b66cc?w=400&h=400&fit=crop' },
-                    { id: 3, name: 'Fujifilm Instax Mini 12', category: 'Photography', price: '$79.00', img: 'https://images.unsplash.com/photo-1526170315870-ef6d82f583f7?w=400&h=400&fit=crop' }
-                ]);
-            }, 100);
-        });
+        const categoryMap = {
+            'Friend': 'smartphones',
+            'Partner': 'fragrances',
+            'Family': 'home-decoration',
+            'Colleague': 'laptops'
+        };
+        const category = categoryMap[recipient] || 'smartphones';
+        const dummyUrl = `https://dummyjson.com/products/category/${category}`;
+        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(dummyUrl)}`;
+
+        console.log(`Fetching real-time gifts for ${recipient}...`);
+        try {
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            if (data.products) {
+                return data.products.slice(0, 12).map(p => ({
+                    id: p.id,
+                    name: p.title,
+                    category: p.category,
+                    price: `$${p.price}`,
+                    img: p.thumbnail
+                }));
+            }
+            return [];
+        } catch (e) {
+            console.error('Gifts API Exception:', e);
+            return [];
+        }
     },
 
     /**
-     * Fetch Travel recommendations (Tripadvisor)
+     * Fetch Travel recommendations (RestCountries)
      * @param {string} purpose 
      */
     async getTravel(purpose = 'Vacation') {
-        console.log(`Fetching ${purpose} destinations from Tripadvisor...`);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve([
-                    { id: 1, place: 'Bali, Indonesia', type: 'Tropical', rating: 4.9, img: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop' },
-                    { id: 2, place: 'Swiss Alps, Switzerland', type: 'Adventure', rating: 4.8, img: 'https://images.unsplash.com/photo-1531310197839-ccf54634509e?w=600&h=400&fit=crop' },
-                    { id: 3, place: 'Kyoto, Japan', type: 'Culture', rating: 4.7, img: 'https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&h=400&fit=crop' }
-                ]);
-            }, 100);
-        });
+        const regionMap = {
+            'Vacation': 'europe',
+            'Adventure': 'americas',
+            'Culture': 'asia',
+            'Food': 'oceania'
+        };
+        const region = regionMap[purpose] || 'asia';
+        const countriesUrl = `https://restcountries.com/v3.1/region/${region}`;
+        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(countriesUrl)}`;
+
+        console.log(`Fetching real-time ${purpose} destinations...`);
+        try {
+            const res = await fetch(proxyUrl);
+            const data = await res.json();
+            if (Array.isArray(data)) {
+                return data.sort(() => 0.5 - Math.random()).slice(0, 12).map((c, i) => ({
+                    id: i,
+                    place: c.name.common,
+                    type: c.subregion || purpose,
+                    rating: (4 + Math.random()).toFixed(1),
+                    img: c.flags.png || c.flags.svg
+                }));
+            }
+            return [];
+        } catch (e) {
+            console.error('Travel API Exception:', e);
+            return [];
+        }
     }
 };
 

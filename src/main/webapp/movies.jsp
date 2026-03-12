@@ -179,7 +179,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=12.0"></script>
+    <script src="js/api.js?v=14.0"></script>
     <script>
         // User Sync
         firebase.auth().onAuthStateChanged((user) => {
@@ -201,7 +201,8 @@
                 grid.innerHTML = '';
                 
                 if (!movies || movies.length === 0) {
-                    grid.innerHTML = '<div class="loading-state">No matching movies found on Netflix right now. Try another genre!</div>';
+                    const errorMsg = ApiClient._lastError || 'No matching movies found on Netflix right now.';
+                    grid.innerHTML = `<div class="loading-state">\${errorMsg}<br><small style="opacity: 0.6; font-size: 10px;">Try switching to "English" or changing the Genre to find more results.</small></div>`;
                     return;
                 }
 

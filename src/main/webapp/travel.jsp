@@ -183,8 +183,10 @@
                 destinations.forEach(dest => {
                     const card = document.createElement('div');
                     card.className = 'travel-card';
+                    const sourceBadge = '<span style="color: #00A699; font-size: 10px; font-weight: bold;">[REAL TIME]</span>';
+                    
                     card.innerHTML = `
-                        <div class="tripadvisor-tag">TRIPADVISOR CHOICE</div>
+                        <div class="tripadvisor-tag">TRIPADVISOR \${sourceBadge}</div>
                         <img src="\${dest.img}" alt="\${dest.place}" class="travel-thumb">
                         <div class="travel-meta">
                             <span class="place-type">\${dest.type}</span>
