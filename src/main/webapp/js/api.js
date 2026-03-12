@@ -341,7 +341,7 @@ const ApiClient = {
                     id: p.id,
                     name: p.title,
                     category: p.category.replace('-', ' '),
-                    price: `$${p.price}`,
+                    price: `₹${Math.round(p.price * 83).toLocaleString('en-IN')}`,
                     img: p.thumbnail,
                     // Dynamically generate an Amazon India search link for this specific item
                     amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title + ' ' + p.brand)}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
