@@ -254,22 +254,41 @@ const ApiClient = {
     },
 
     /**
-     * Fetch Gift recommendations (DummyJSON)
-     * @param {string} recipient 
-     * @param {string} occasion 
+     * Fetch Gift recommendations (DummyJSON for UI, Amazon IN for Purchasing)
+     * Maps Recipient & Occasion to a specific category and generates direct Amazon.in search links
      */
     async getGifts(recipient = 'Friend', occasion = 'Birthday') {
         const categoryMap = {
-            'Friend': 'smartphones',
-            'Partner': 'fragrances',
-            'Family': 'home-decoration',
-            'Colleague': 'laptops'
+            'Friend': {
+                'Birthday': 'smartphones',
+                'Anniversary': 'sunglasses',
+                'Holiday': 'sports-accessories'
+            },
+            'Partner': {
+                'Birthday': 'womens-watches', // using generic, DummyJSON has limited categories
+                'Anniversary': 'womens-jewellery',
+                'Holiday': 'fragrances'
+            },
+            'Family': {
+                'Birthday': 'home-decoration',
+                'Anniversary': 'furniture',
+                'Holiday': 'groceries'
+            },
+            'Colleague': {
+                'Birthday': 'laptops',
+                'Anniversary': 'mens-watches',
+                'Holiday': 'tablets'
+            }
         };
-        const category = categoryMap[recipient] || 'smartphones';
+
+        const safeRecipient = categoryMap[recipient] ? recipient : 'Friend';
+        const safeOccasion = categoryMap[safeRecipient][occasion] ? occasion : 'Birthday';
+        const category = categoryMap[safeRecipient][safeOccasion];
+
         const dummyUrl = `https://dummyjson.com/products/category/${category}`;
         const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(dummyUrl)}`;
 
-        console.log(`Fetching real-time gifts for ${recipient}...`);
+        console.log(`Fetching real-time gifts for ${recipient} on ${occasion} (Category: ${category})...`);
         try {
             const res = await fetch(proxyUrl);
             const data = await res.json();
@@ -277,9 +296,11 @@ const ApiClient = {
                 return data.products.slice(0, 12).map(p => ({
                     id: p.id,
                     name: p.title,
-                    category: p.category,
+                    category: p.category.replace('-', ' '),
                     price: `$${p.price}`,
-                    img: p.thumbnail
+                    img: p.thumbnail,
+                    // Dynamically generate an Amazon India search link for this specific item
+                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title + ' ' + p.brand)}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
                 }));
             }
             return [];

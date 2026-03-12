@@ -160,10 +160,13 @@
                     
                     card.innerHTML = `
                         <img src="\${gift.img}" alt="\${gift.name}" class="gift-thumb">
-                        <span class="amazon-tag">AMAZON CHOICE \${sourceBadge}</span>
+                        <span class="amazon-tag">AMAZON IN \${sourceBadge}</span>
                         <div class="gift-name">\${gift.name}</div>
-                        <div style="font-size:13px; color:var(--text-muted); margin-bottom:15px;">\${gift.category}</div>
+                        <div style="font-size:13px; color:var(--text-muted); margin-bottom:15px; text-transform: capitalize;">\${gift.category}</div>
                         <div class="gift-price">\${gift.price}</div>
+                        <a href="\${gift.amazonUrl}" target="_blank" style="margin-top: 15px; background: #FF9900; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; width: 100%; display: inline-block;">
+                            Buy on Amazon.in
+                        </a>
                     `;
                     grid.appendChild(card);
                 });
