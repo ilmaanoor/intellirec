@@ -200,19 +200,24 @@
                 const movies = await ApiClient.getMovies(genre, lang);
                 grid.innerHTML = '';
                 
+                if (movies.length === 0) {
+                    grid.innerHTML = '<div class="loading-state">No matching movies found on Netflix right now. Try another genre!</div>';
+                    return;
+                }
+
                 movies.forEach(movie => {
                     const card = document.createElement('div');
                     card.className = 'movie-card';
                     card.innerHTML = `
-                        <img src="\${movie.img}" alt="\${movie.title}" class="movie-thumb" onerror="this.src='https://via.placeholder.com/400x600?text=No+Image'">
+                        <img src="${movie.img}" alt="${movie.title}" class="movie-thumb" onerror="this.src='https://via.placeholder.com/400x600?text=No+Image'">
                         <div class="movie-meta">
                             <span class="movie-tag">Netflix Choice</span>
-                            <h3 class="movie-title">\${movie.title}</h3>
+                            <h3 class="movie-title">${movie.title}</h3>
                             <div class="movie-footer">
-                                <span>\${movie.genre}</span>
+                                <span>${movie.genre}</span>
                                 <span class="rating">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-                                    \${movie.rating}
+                                    ${movie.rating}
                                 </span>
                             </div>
                         </div>
@@ -220,7 +225,7 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = '<div class="loading-state">Unable to load recommendations. Please refresh.</div>';
+                grid.innerHTML = '<div class="loading-state">Unable to load recommendations. Please check your internet connection or browser console (F12).</div>';
             }
         }
 

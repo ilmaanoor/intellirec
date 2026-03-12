@@ -40,25 +40,35 @@ const ApiClient = {
 
         try {
             const url = new URL(`${API_CONFIG.TMDB_BASE_URL}/discover/movie`);
-            url.search = new URLSearchParams({
+            const params = {
                 api_key: API_CONFIG.TMDB_API_KEY,
                 language: langCode,
                 sort_by: 'popularity.desc',
-                with_genres: genreId,
                 with_watch_providers: API_CONFIG.NETFLIX_PROVIDER_ID,
-                watch_region: 'IN', // Defaulting to IN for wide range of languages requested
-                'vote_count.gte': 100 // Quality filter
-            }).toString();
+                watch_region: 'IN', // Optimized for the requested languages
+                'vote_count.gte': 50 // Lowered threshold for broader results
+            };
+
+            if (genreId) params.with_genres = genreId;
+
+            url.search = new URLSearchParams(params).toString();
+            console.log(`TMDB Request: ${url.toString()}`);
 
             const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
             const data = await response.json();
+            console.log('TMDB Response:', data);
 
-            if (!data.results) return this._getSimulatedMovies(genre);
+            if (!data.results || data.results.length === 0) {
+                console.warn('No real-time results found for this filter. Falling back to simulation.');
+                return this._getSimulatedMovies(genre);
+            }
 
             return data.results.slice(0, 12).map(m => ({
                 id: m.id,
                 title: m.title,
-                genre: genre, // Map back to selected genre for UI
+                genre: genre,
                 rating: m.vote_average.toFixed(1),
                 img: m.poster_path ? `https://image.tmdb.org/t/p/w500${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
             }));
