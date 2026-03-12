@@ -159,8 +159,10 @@
             <label>Language</label>
             <select id="lang-filter" class="form-control">
                 <option value="English">English</option>
-                <option value="Spanish">Spanish</option>
                 <option value="Hindi">Hindi</option>
+                <option value="Tamil">Tamil</option>
+                <option value="Telugu">Telugu</option>
+                <option value="Korean">Korean</option>
             </select>
         </div>
     </div>
