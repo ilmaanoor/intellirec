@@ -40,7 +40,8 @@ const ApiClient = {
         console.log(`Fetching real-time ${genre} movies in ${language} from TMDB...`);
 
         try {
-            const url = new URL(`${API_CONFIG.TMDB_BASE_URL}/discover/movie`);
+            // Using proxy.jsp to avoid "Failed to fetch" network/CORS issues
+            const url = new URL(`${window.location.origin}/intellirec/proxy.jsp`);
             const params = {
                 api_key: API_CONFIG.TMDB_API_KEY,
                 language: langCode,
