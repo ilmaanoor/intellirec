@@ -1,326 +1,405 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Intellirec AI - Discover Your World</title>
-    <link rel="stylesheet" href="css/style_v1.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@400;700&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #FFD700;
+            --primary-dark: #FFA500;
+            --glass: rgba(255, 215, 0, 0.7);
+            --glass-nav: rgba(255, 215, 0, 0.95);
+            --text-dark: #1A1A1A;
+            --text-muted: #7F8C8D;
+            --header-h: 70px;
+            --nav-h: 50px;
+            --footer-h: 50px;
+            --transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background-color: #FFFDF8; /* Extremely soft, warm white-yellow */
-            overflow-x: hidden;
-            font-family: 'Outfit', sans-serif;
-            margin: 0;
-            padding: 0;
-            color: #1A1A1A;
+            font-family: 'Inter', sans-serif;
+            background: var(--text-dark);
+            color: white;
+            overflow: hidden;
+            height: 100vh;
         }
 
-        /* Ambient Creative Lighting Effects */
-        .ambient-glow {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(100px);
-            z-index: -1;
-            opacity: 0.6;
-            animation: breathe 12s ease-in-out infinite alternate;
-        }
-
-        .glow-movies { width: 500px; height: 500px; background: rgba(255, 107, 107, 0.2); top: -100px; left: -100px; } /* Netflix Red hint */
-        .glow-music { width: 400px; height: 400px; background: rgba(29, 185, 84, 0.15); bottom: 10%; right: -50px; } /* Spotify Green hint */
-        .glow-travel { width: 600px; height: 600px; background: rgba(0, 166, 153, 0.15); top: 40%; left: 30%; } /* Tripadvisor Green hint */
-        .glow-gifts { width: 450px; height: 450px; background: rgba(255, 153, 0, 0.2); top: 10%; right: 10%; } /* Amazon Orange/Yellow hint */
-
-        @keyframes breathe {
-            0% { transform: scale(0.8) translate(0, 0); opacity: 0.4; }
-            100% { transform: scale(1.1) translate(30px, -20px); opacity: 0.7; }
-        }
-
-        /* Header Styling */
-        header {
-            position: absolute;
+        /* --- 1. HEADER SECTION --- */
+        .header {
+            position: fixed;
             top: 0; left: 0; width: 100%;
-            padding: 2rem 4rem;
-            box-sizing: border-box;
-            z-index: 100;
+            height: var(--header-h);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 0 40px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
-        
-        .logo {
-            font-size: 1.8rem;
-            color: #1A1A1A;
+
+        .user-identity {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .user-name {
+            font-weight: 700;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-signout {
+            background: var(--primary);
+            color: var(--text-dark);
+            padding: 8px 20px;
+            border-radius: 25px;
             text-decoration: none;
-            font-weight: 800;
-            letter-spacing: -0.5px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: var(--transition);
+            box-shadow: 0 0 0px rgba(255, 215, 0, 0);
         }
-        
-        .logo span {
-            color: #FFB300; /* Sophisticated Amber/Yellow */
+
+        .btn-signout:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+            background: white;
         }
-        
-        .nav-link {
-            padding: 0.8rem 1.8rem;
-            border: 2px solid #EAEAEA;
-            border-radius: 50px;
-            color: #1A1A1A;
+
+        /* --- 2. NAVIGATION BAR --- */
+        .navbar {
+            position: fixed;
+            top: var(--header-h);
+            left: 0; width: 100%;
+            height: var(--nav-h);
+            background: var(--glass-nav);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .nav-items {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .nav-items a {
             text-decoration: none;
+            color: var(--text-dark);
             font-weight: 600;
             font-size: 0.95rem;
-            transition: all 0.3s ease;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
+            position: relative;
+            transition: var(--transition);
         }
 
-        .nav-link:hover {
-            border-color: #1A1A1A;
-            background: #1A1A1A;
-            color: #FFF;
+        .nav-items a:hover {
+            transform: scale(1.1);
         }
 
-        /* Hero Section Split Layout */
-        .hero-container {
+        .nav-items a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 0; width: 100%; height: 2px;
+            background: var(--text-dark);
+        }
+
+        /* --- 3. HERO CANVAS --- */
+        .hero-canvas {
+            position: relative;
+            top: calc(var(--header-h) + var(--nav-h));
+            width: 100%;
+            height: calc(100vh - var(--header-h) - var(--nav-h) - var(--footer-h));
+            overflow: hidden;
             display: flex;
-            min-height: 100vh;
+            justify-content: center;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 8vw;
+            background: linear-gradient(135deg, #FFD700, #FFA500, #FFCC00);
+            background-size: 400% 400%;
+            animation: gradientAnim 8s infinite alternate;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* Parallax Layer */
+        .parallax-bg {
+            position: absolute;
+            top: -10%; left: -10%; width: 120%; height: 120%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            opacity: 0.15;
+            z-index: 1;
+            pointer-events: none;
+            transition: transform 0.1s ease-out;
+        }
+
+        .parallax-bg img {
+            width: 100%; height: 100%; object-fit: cover;
+            border-radius: 20px;
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            width: 8px; height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 2;
+            animation: floatParticle 12s infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+
+        /* Center Content Container */
+        .content-stack {
             position: relative;
             z-index: 10;
-        }
-
-        /* Left Side: Editorial Typography */
-        .hero-text {
-            flex: 1;
-            max-width: 600px;
-            padding-right: 4rem;
-        }
-
-        .category-tags {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .tag {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            font-weight: 700;
-            color: #888;
-        }
-
-        .hero-text h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 4.8rem;
-            color: #1A1A1A;
-            font-weight: 600;
-            line-height: 1.05;
-            margin: 0 0 1.5rem 0;
-            letter-spacing: -1px;
-        }
-
-        .hero-text h1 span {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            color: #FFB300; /* The highlight yellow */
-            display: block;
-        }
-
-        .hero-text p {
-            font-size: 1.2rem;
-            color: #555;
-            font-weight: 300;
-            line-height: 1.7;
-            margin: 0 0 3rem 0;
-            max-width: 480px;
-        }
-
-        /* The Amoeba Button */
-        .amoeba-wrapper {
-            position: relative;
-            display: inline-block;
-        }
-
-        .amoeba-btn-custom {
-            display: flex;
-            align-items: center;
-            justify-content: center;
             text-align: center;
-            width: 280px;
-            height: 260px;
-            background: linear-gradient(135deg, #FFC107 0%, #FF9800 100%);
-            color: #FFF;
+            max-width: 900px;
+            padding: 0 20px;
+        }
+
+        .headline {
+            font-family: 'Playfair Display', serif;
+            font-size: 72px;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            color: var(--text-dark);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: slideUp 0.7s forwards 0.3s;
+        }
+
+        .cta-button {
+            display: inline-flex;
+            width: 320px;
+            height: 90px;
+            background: var(--text-dark);
+            color: var(--primary);
+            justify-content: center;
+            align-items: center;
             font-size: 1.5rem;
             font-weight: 800;
             text-decoration: none;
-            line-height: 1.2;
-            cursor: pointer;
-            box-shadow: 
-                0 20px 40px rgba(255, 152, 0, 0.3),
-                inset 0 2px 10px rgba(255, 255, 255, 0.4);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            animation: morphBtn 8s ease-in-out infinite;
-            padding: 2rem;
-            position: relative;
-            z-index: 5;
-        }
-
-        .amoeba-btn-custom::before {
-            content: '';
-            position: absolute;
-            top: -2px; left: -2px; right: -2px; bottom: -2px;
-            background: linear-gradient(45deg, #FFC107, transparent, #FF9800);
-            z-index: -1;
-            border-radius: inherit;
+            border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+            margin-bottom: 30px;
+            border: 4px solid var(--text-dark);
+            transition: var(--transition);
             opacity: 0;
-            transition: opacity 0.3s;
+            transform: rotate(-10deg) scale(0.5);
+            animation: materialize 1s forwards 1s, breatheCTA 3s infinite 2s;
         }
 
-        .amoeba-btn-custom:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 
-                0 30px 50px rgba(255, 152, 0, 0.4),
-                inset 0 2px 10px rgba(255, 255, 255, 0.6);
-            letter-spacing: 1px;
-        }
-        
-        .amoeba-btn-custom:hover::before {
-            opacity: 1;
+        .cta-button:hover {
+            transform: scale(1.1) rotate(0deg);
+            background: white;
+            color: var(--text-dark);
+            border-radius: 50%;
         }
 
-        @keyframes morphBtn {
-            0% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
-            33% { border-radius: 40% 60% 70% 30% / 50% 60% 30% 60%; }
-            66% { border-radius: 50% 50% 40% 60% / 40% 40% 60% 60%; }
-            100% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+        .tagline {
+            font-size: 22px;
+            color: rgba(0,0,0,0.7);
+            opacity: 0;
+            animation: fadeIn 0.5s forwards 1.2s;
         }
 
-        /* Right Side: Creative Visual Abstract Representation */
-        .visual-showcase {
-            flex: 1;
-            position: relative;
+        @keyframes slideUp { to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { to { opacity: 1; } }
+        @keyframes materialize { to { opacity: 1; transform: rotate(0deg) scale(1); } }
+        @keyframes breatheCTA {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Orbiting Icons */
+        .orbit-container {
+            position: absolute;
+            width: 600px;
             height: 600px;
+            border-radius: 50%;
+            z-index: 5;
+            animation: rotateOrbit 20s linear infinite;
+        }
+
+        .orbit-icon {
+            position: absolute;
+            width: 72px;
+            height: 72px;
+            background: white;
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
+            font-size: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: var(--transition);
+            cursor: pointer;
+            animation: counterRotate 20s linear infinite;
+            opacity: 0;
         }
 
-        .glass-card {
+        .orbit-icon:hover {
+            transform: scale(1.3);
+            z-index: 100;
+            box-shadow: 0 15px 40px rgba(255, 215, 0, 0.4);
+        }
+
+        .orbit-icon .tooltip {
             position: absolute;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            border-radius: 24px;
-            box-shadow: 0 25px 50px rgba(0,0,0,0.06);
+            bottom: -40px;
+            background: var(--text-dark);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            white-space: nowrap;
+            transition: 0.3s;
+        }
+
+        .orbit-icon:hover .tooltip { opacity: 1; bottom: -50px; }
+
+        .icon-1 { top: -36px; left: 50%; transform: translateX(-50%); animation-delay: 1.5s !important; } /* 10 o'clock relative to center? specification says positions. */
+        /* Exact placement based on 600px circle */
+        .icon-1 { top: 15%; left: 15%; } /* Film Reel */
+        .icon-2 { top: 15%; right: 15%; } /* Headphones */
+        .icon-3 { bottom: 15%; right: 15%; } /* Luxury Gift Box */
+        .icon-4 { bottom: 15%; left: 15%; } /* World Globe */
+
+        @keyframes rotateOrbit { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes counterRotate { from { transform: rotate(0deg); } to { transform: rotate(-360deg); } }
+
+        /* --- 4. FOOTER --- */
+        .footer {
+            position: fixed;
+            bottom: 0; left: 0; width: 100%;
+            height: var(--footer-h);
             display: flex;
+            justify-content: center;
             align-items: center;
-            padding: 1rem 1.5rem;
-            gap: 1.5rem;
-            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--text-dark);
+            color: #AAA;
+            font-size: 0.9rem;
+            z-index: 1000;
         }
 
-        .glass-card:hover {
-            transform: translateY(-10px) scale(1.05) !important;
-            z-index: 20;
-            background: rgba(255, 255, 255, 0.95);
+        /* --- STAGGERED CASCADE --- */
+        .cascade-in {
+            animation: slideUp 0.5s forwards;
+            opacity: 0;
         }
 
-        .glass-card img {
-            width: 80px;
-            height: 80px;
-            border-radius: 16px;
-            object-fit: cover;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .headline { font-size: 42px; }
+            .cta-button { width: 95vw; }
+            .nav-items { display: none; }
+            .orbit-container { display: none; }
+            .mobile-icons {
+                display: flex;
+                gap: 20px;
+                margin-top: 20px;
+                overflow-x: auto;
+                padding-bottom: 10px;
+            }
         }
-
-        .card-info h3 { margin: 0 0 0.3rem 0; font-size: 1.1rem; color: #1A1A1A; }
-        .card-info p { margin: 0; font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-
-        /* Positioning the 4 category cards creatively */
-        .card-movie { top: 10%; right: 10%; transform: rotate(5deg); animation: floatCard 6s ease-in-out infinite alternate; }
-        .card-music { top: 40%; left: 0%; transform: rotate(-5deg); animation: floatCard 8s ease-in-out 1s infinite alternate; }
-        .card-travel { bottom: 20%; right: 5%; transform: rotate(8deg); animation: floatCard 7s ease-in-out 2s infinite alternate; }
-        .card-gift { bottom: -5%; left: 20%; transform: rotate(-8deg); animation: floatCard 9s ease-in-out 0.5s infinite alternate; }
-
-        @keyframes floatCard {
-            0% { transform: translateY(0px) rotate(var(--rot, 0deg)); }
-            100% { transform: translateY(-20px) rotate(var(--rot, 0deg)); }
-        }
-        
-        .card-movie { --rot: 5deg; }
-        .card-music { --rot: -5deg; }
-        .card-travel { --rot: 8deg; }
-        .card-gift { --rot: -8deg; }
-
     </style>
 </head>
 <body>
-    <!-- Abstract Ambient Glows representing the API sources subtly -->
-    <div class="ambient-glow glow-movies"></div>
-    <div class="ambient-glow glow-music"></div>
-    <div class="ambient-glow glow-travel"></div>
-    <div class="ambient-glow glow-gifts"></div>
 
-    <header>
-        <a href="index.jsp" class="logo">Intelli<span>Rec</span></a>
-        <a href="#" id="logout-btn" class="nav-link">Logout</a>
-    </header>
+    <div class="header">
+        <div class="user-identity">
+            <img id="user-avatar" class="avatar" src="https://ui-avatars.com/api/?background=random&name=User" alt="Avatar">
+            <span id="user-display-name" class="user-name">Welcome back, User</span>
+        </div>
+        <a href="#" id="logout-btn" class="btn-signout">Sign Out</a>
+    </div>
 
-    <div class="hero-container">
-        <!-- Left Side Typography & Button -->
-        <div class="hero-text">
-            <div class="category-tags">
-                <span class="tag">Movies</span> • 
-                <span class="tag">Music</span> • 
-                <span class="tag">Gifts</span> • 
-                <span class="tag">Travel</span>
+    <nav class="navbar">
+        <ul class="nav-items">
+            <li><a href="#" class="active">Home</a></li>
+            <li><a href="movies.jsp">Movies</a></li>
+            <li><a href="songs.jsp">Songs</a></li>
+            <li><a href="gifts.jsp">Gifts</a></li>
+            <li><a href="travel.jsp">Travel</a></li>
+            <li><a href="profile.jsp">Profile</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero-canvas" id="canvas">
+        <!-- Parallax Layer -->
+        <div class="parallax-bg" id="parallax">
+            <img src="https://images.unsplash.com/photo-1485099046331-7481016d97a9?w=800&q=80" alt="Movies">
+            <img src="https://images.unsplash.com/photo-1514525253361-b83f8a9027c0?w=800&q=80" alt="Music">
+            <img src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=800&q=80" alt="Gifts">
+            <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80" alt="Travel">
+        </div>
+
+        <!-- Orbiting Icons -->
+        <div class="orbit-container">
+            <div class="orbit-icon icon-1" style="animation-delay: 1.5s; opacity: 1;">
+                🎬
+                <div class="tooltip">Film Reel</div>
             </div>
-            <h1>Curated for your <br><span>Unique World</span></h1>
-            <p>We analyze real-time data from Netflix, Spotify, Amazon, and Tripadvisor to bring you highly personalized, intelligent recommendations tailored specifically to your taste and mood.</p>
-            
-            <div class="amoeba-wrapper">
-                <a href="categories.jsp" class="amoeba-btn-custom">
-                    Recommendations<br>For You
-                </a>
+            <div class="orbit-icon icon-2" style="animation-delay: 1.7s; opacity: 1;">
+                🎧
+                <div class="tooltip">Headphones</div>
+            </div>
+            <div class="orbit-icon icon-3" style="animation-delay: 1.9s; opacity: 1;">
+                🎁
+                <div class="tooltip">Luxury Gift Box</div>
+            </div>
+            <div class="orbit-icon icon-4" style="animation-delay: 2.1s; opacity: 1;">
+                🌍
+                <div class="tooltip">World Globe</div>
             </div>
         </div>
 
-        <!-- Right Side Creative Abstract Visuals -->
-        <div class="visual-showcase">
-            <div class="glass-card card-movie">
-                <img src="https://images.unsplash.com/photo-1485846234645-a62644f84728?w=200&h=200&fit=crop" alt="Cinema">
-                <div class="card-info">
-                    <h3>Cinema Graph</h3>
-                    <p>Trending</p>
-                </div>
-            </div>
-
-            <div class="glass-card card-music">
-                <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=200&h=200&fit=crop" alt="Audio">
-                <div class="card-info">
-                    <h3>Audio Waves</h3>
-                    <p>Frequency</p>
-                </div>
-            </div>
-
-            <div class="glass-card card-travel">
-                <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200&h=200&fit=crop" alt="Oceans">
-                <div class="card-info">
-                    <h3>Horizon Lines</h3>
-                    <p>Expedition</p>
-                </div>
-            </div>
-
-            <div class="glass-card card-gift">
-                <img src="https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop" alt="Boutique">
-                <div class="card-info">
-                    <h3>Curated Items</h3>
-                    <p>Selection</p>
-                </div>
-            </div>
+        <!-- Center Content -->
+        <div class="content-stack">
+            <h1 class="headline">Intelligent Recommendations<br>For Everything You Love</h1>
+            <a href="categories.jsp" class="cta-button">Discover Your Matches</a>
+            <p class="tagline">Curated from Netflix • Spotify • Amazon • Global Travel</p>
         </div>
+
+        <!-- Particles Container (Javascript will populate) -->
+        <div id="particles"></div>
+    </div>
+
+    <div class="footer">
+        Powered by Intellirec AI
     </div>
 
     <script src="js/firebase-app-compat.js"></script>
@@ -328,11 +407,43 @@
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        // Protection: redirect to login if not authenticated
+        // --- 1. FIREBASE AUTH & USER NAME ---
         firebase.auth().onAuthStateChanged((user) => {
             if (!user) {
                 window.location.href = 'login.jsp';
+            } else {
+                const name = user.displayName || user.email.split('@')[0];
+                document.getElementById('user-display-name').innerText = "Welcome back, " + name;
+                document.getElementById('user-avatar').src = "https://ui-avatars.com/api/?background=FFD700&color=1A1A1A&bold=true&name=" + name;
             }
+        });
+
+        // --- 2. PARALLAX EFFECT ---
+        const canvas = document.getElementById('canvas');
+        const parallax = document.getElementById('parallax');
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const x = (e.clientX - window.innerWidth / 2) / 50;
+            const y = (e.clientY - window.innerHeight / 2) / 50;
+            parallax.style.transform = `translate(${x}px, ${y}px) rotateX(${y * 0.1}deg) rotateY(${-x * 0.1}deg)`;
+        });
+
+        // --- 3. PARTICLES GENERATION ---
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 15; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.top = Math.random() * 100 + 100 + '%';
+            p.style.animationDelay = Math.random() * 10 + 's';
+            p.style.opacity = Math.random();
+            particlesContainer.appendChild(p);
+        }
+
+        // --- 4. LOAD SEQUENCE ANIMATION STAGGERING ---
+        // Most are handled in CSS, but icons need explicit opacity toggle if they use cascade
+        document.querySelectorAll('.orbit-icon').forEach((icon, index) => {
+            icon.style.animation = `slideUp 0.5s forwards ${1.5 + index * 0.2}s, counterRotate 20s linear infinite`;
         });
     </script>
 </body>
