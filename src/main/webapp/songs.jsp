@@ -104,11 +104,11 @@
             <div class="filter-group" style="flex: 1;">
                 <label>Select Language</label>
                 <select id="language-filter" class="form-control">
-                    <option value="English">English (Global Pop)</option>
-                    <option value="Hindi">Hindi (Bollywood)</option>
-                    <option value="Korean">Korean (K-Pop)</option>
-                    <option value="Spanish">Spanish (Latin)</option>
+                    <option value="English">English</option>
+                    <option value="Hindi">Hindi</option>
                     <option value="Tamil">Tamil</option>
+                    <option value="Korean">Korean</option>
+                    <option value="Chinese">Chinese</option>
                 </select>
             </div>
             <div class="filter-group" style="flex: 1;">

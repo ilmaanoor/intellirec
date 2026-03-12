@@ -158,42 +158,42 @@ const ApiClient = {
      * Fetch Top/Trending Songs based on Language & Mood, or specific Artist using iTunes API
      */
     async getSongs(language = 'English', mood = 'Happy', artist = '') {
-        // Highly targeted search queries for every combination to ensure results and top hits
+        // Extremely targeted search queries to force iTunes to return specific languages
         const queryMap = {
             'English': {
-                'Happy': 'pop dance hits upbeat trending',
-                'Chill': 'acoustic chill pop top hits',
-                'Focus': 'study focus pop instrumental hits',
-                'Workout': 'workout gym pop hits energy',
-                'Romantic': 'romantic pop love top hits'
+                'Happy': 'english pop dance upbeat hits',
+                'Chill': 'english acoustic chill pop hits',
+                'Focus': 'english study focus pop hits',
+                'Workout': 'english workout gym pop hits',
+                'Romantic': 'english romantic pop love hits'
             },
             'Hindi': {
-                'Happy': 'bollywood dance party top hits',
-                'Chill': 'bollywood lo-fi chill trending',
-                'Focus': 'bollywood instrumental hits',
-                'Workout': 'bollywood workout energy hits',
-                'Romantic': 'bollywood romantic love hits'
+                'Happy': 'hindi bollywood dance party hits',
+                'Chill': 'hindi bollywood lo-fi chill',
+                'Focus': 'hindi bollywood instrumental',
+                'Workout': 'hindi bollywood workout energy',
+                'Romantic': 'hindi bollywood romantic love'
             },
             'Korean': {
-                'Happy': 'k-pop upbear dance top hits',
-                'Chill': 'k-pop chill r&b trending',
-                'Focus': 'k-pop instrumental study',
-                'Workout': 'k-pop workout gym hits',
-                'Romantic': 'k-pop love romance hits'
+                'Happy': 'korean k-pop dance upbeat hits',
+                'Chill': 'korean k-pop chill r&b',
+                'Focus': 'korean k-pop instrumental',
+                'Workout': 'korean k-pop workout gym',
+                'Romantic': 'korean k-pop love romance'
             },
-            'Spanish': {
-                'Happy': 'latin pop reggaeton dance hits',
-                'Chill': 'latin acoustic chill hits',
-                'Focus': 'latin guitar study trending',
-                'Workout': 'latin gym reggaeton hits',
-                'Romantic': 'latin romance bachata top hits'
+            'Chinese': {
+                'Happy': 'chinese mandopop dance top hits',
+                'Chill': 'chinese mandopop chill acoustic',
+                'Focus': 'chinese instrumental guzheng focus',
+                'Workout': 'chinese hip hop workout energy',
+                'Romantic': 'chinese mandopop romantic love'
             },
             'Tamil': {
                 'Happy': 'tamil kuthu dance party hits',
-                'Chill': 'tamil melody chill trending',
-                'Focus': 'tamil instrumental flute hits',
-                'Workout': 'tamil workout motivation hits',
-                'Romantic': 'tamil romantic love top hits'
+                'Chill': 'tamil melody chill acoustic',
+                'Focus': 'tamil instrumental flute',
+                'Workout': 'tamil workout motivation',
+                'Romantic': 'tamil romantic love hits'
             }
         };
 
