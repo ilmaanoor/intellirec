@@ -155,20 +155,20 @@ const ApiClient = {
     },
 
     /**
-     * Fetch Top/Trending Songs based on Language & Mood, or specific Artist using iTunes API
+     * Fetch Top Songs based on Language & Mood, or specific Artist using Deezer API
+     * Provides unmatched regional diversity and global catalogs with 30s previews.
      */
     async getSongs(language = 'English', mood = 'Happy', artist = '') {
-        // Extremely targeted search queries to force iTunes to return specific languages
         const queryMap = {
             'English': {
-                'Happy': 'pop dance hits upbeat',
-                'Chill': 'acoustic chill pop hits',
-                'Focus': 'study focus pop hits',
-                'Workout': 'workout gym pop hits',
-                'Romantic': 'romantic pop love hits'
+                'Happy': 'pop dance upbeat hit',
+                'Chill': 'acoustic chill pop',
+                'Focus': 'study hit',
+                'Workout': 'workout energy hit',
+                'Romantic': 'romantic love pop'
             },
             'Hindi': {
-                'Happy': 'hindi bollywood party hit',
+                'Happy': 'hindi bollywood party dance',
                 'Chill': 'hindi bollywood chill lofi',
                 'Focus': 'hindi bollywood instrumental',
                 'Workout': 'hindi bollywood workout',
@@ -182,66 +182,55 @@ const ApiClient = {
                 'Romantic': 'k-pop romance hit'
             },
             'Chinese': {
-                'Happy': 'c-pop mandopop dance hit',
-                'Chill': 'c-pop mandopop chill',
-                'Focus': 'c-pop instrumental focus',
-                'Workout': 'c-pop workout',
-                'Romantic': 'c-pop mandopop romance'
+                'Happy': 'mandopop dance hit',
+                'Chill': 'mandopop chill',
+                'Focus': 'chinese instrumental focus',
+                'Workout': 'c-pop workout energy',
+                'Romantic': 'mandopop romantic love'
             },
             'Tamil': {
-                'Happy': 'tamil punch hit',
+                'Happy': 'tamil kuthu party',
                 'Chill': 'tamil melody chill',
-                'Focus': 'tamil flute instrumental',
+                'Focus': 'tamil instrumental flute',
                 'Workout': 'tamil workout motivation',
                 'Romantic': 'tamil romantic love'
             }
         };
 
-        // Specific country codes to force iTunes regional catalogs
-        const countryMap = {
-            'English': 'US',
-            'Hindi': 'IN',
-            'Korean': 'KR',
-            'Chinese': 'TW',
-            'Tamil': 'IN'
-        };
-
         let query;
-        let country = 'US'; // default
-        
+
         if (artist && artist.trim() !== '') {
-            query = `${artist.trim()} top hits best`;
+            query = `${artist.trim()} top hits`;
         } else {
             // Fallback to a generic query if somehow not mapped
             const safeLanguage = queryMap[language] ? language : 'English';
             const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
             query = queryMap[safeLanguage][safeMood];
-            country = countryMap[safeLanguage];
         }
 
-        // Add explicit country parameter and sorting for most recent/popular
-        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${country}&media=music&entity=song&limit=12`;
-        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
+        // Search deezer endpoint
+        const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}&limit=12`;
+        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(deezerUrl)}`;
 
-        console.log(`Searching iTunes for: ${query} in ${country}...`);
+        console.log(`Searching Deezer for: ${query}...`);
         try {
             const res = await fetch(proxyUrl);
             const data = await res.json();
             
-            if (data.results && data.results.length > 0) {
-                return data.results.map(t => ({
-                    id: t.trackId,
-                    title: t.trackName,
-                    artist: t.artistName,
-                    album: t.collectionName,
-                    img: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '300x300bb') : 'https://via.placeholder.com/300?text=No+Cover',
-                    url: t.trackViewUrl,
-                    preview: t.previewUrl
+            if (data.data && data.data.length > 0) {
+                return data.data.map(t => ({
+                    id: t.id,
+                    title: t.title,
+                    artist: t.artist.name,
+                    album: t.album.title,
+                    img: t.album.cover_xl || t.album.cover_medium || 'https://via.placeholder.com/300?text=No+Cover',
+                    url: t.link,
+                    preview: t.preview
                 }));
             }
             return [];
         } catch (err) {
-            console.error('iTunes API Exception:', err);
+            console.error('Deezer API Exception:', err);
             return [];
         }
     },
