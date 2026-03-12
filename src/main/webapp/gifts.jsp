@@ -108,7 +108,12 @@
                 <option value="Friend">For a Friend</option>
                 <option value="Partner">For a Partner</option>
                 <option value="Family">For Family</option>
-                <option value="Colleague">For a Colleague</option>
+                <optgroup label="Professional">
+                    <option value="Colleague">For a Colleague</option>
+                    <option value="Manager">For a Manager</option>
+                    <option value="Client">For a Client</option>
+                    <option value="Mentor">For a Mentor</option>
+                </optgroup>
             </select>
         </div>
         <div class="filter-group" style="flex: 1;">
@@ -116,7 +121,13 @@
             <select id="occasion-filter" class="form-control">
                 <option value="Birthday">Birthday</option>
                 <option value="Anniversary">Anniversary</option>
-                <option value="Holiday">Just Because</option>
+                <option value="Holiday">Just Because / Holiday</option>
+                <optgroup label="Professional Events">
+                    <option value="Promotion">Promotion</option>
+                    <option value="Farewell">Farewell / Retirement</option>
+                    <option value="ThankYou">Thank You</option>
+                    <option value="Welcome">Onboarding / Welcome</option>
+                </optgroup>
             </select>
         </div>
     </div>

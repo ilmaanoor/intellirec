@@ -258,26 +258,70 @@ const ApiClient = {
      * Maps Recipient & Occasion to a specific category and generates direct Amazon.in search links
      */
     async getGifts(recipient = 'Friend', occasion = 'Birthday') {
+        // Expanded category map for personal and professional combinations
         const categoryMap = {
             'Friend': {
                 'Birthday': 'smartphones',
                 'Anniversary': 'sunglasses',
-                'Holiday': 'sports-accessories'
+                'Holiday': 'sports-accessories',
+                'Promotion': 'mens-watches',
+                'Farewell': 'fragrances',
+                'ThankYou': 'groceries', // often contains chocolates/gift baskets in DummyJSON
+                'Welcome': 'home-decoration'
             },
             'Partner': {
-                'Birthday': 'womens-watches', // using generic, DummyJSON has limited categories
+                'Birthday': 'womens-watches', 
                 'Anniversary': 'womens-jewellery',
-                'Holiday': 'fragrances'
+                'Holiday': 'fragrances',
+                'Promotion': 'smartphones',
+                'Farewell': 'womens-bags',
+                'ThankYou': 'womens-jewellery',
+                'Welcome': 'tops'
             },
             'Family': {
                 'Birthday': 'home-decoration',
                 'Anniversary': 'furniture',
-                'Holiday': 'groceries'
+                'Holiday': 'groceries',
+                'Promotion': 'tablets',
+                'Farewell': 'home-decoration',
+                'ThankYou': 'groceries',
+                'Welcome': 'furniture'
             },
             'Colleague': {
                 'Birthday': 'laptops',
                 'Anniversary': 'mens-watches',
-                'Holiday': 'tablets'
+                'Holiday': 'tablets',
+                'Promotion': 'smartphones',
+                'Farewell': 'mens-shirts',
+                'ThankYou': 'fragrances',
+                'Welcome': 'tablets'
+            },
+            'Manager': {
+                'Birthday': 'mens-watches',
+                'Anniversary': 'home-decoration',
+                'Holiday': 'laptops',
+                'Promotion': 'smartphones',
+                'Farewell': 'furniture',
+                'ThankYou': 'fragrances',
+                'Welcome': 'mens-shirts'
+            },
+            'Client': {
+                'Birthday': 'fragrances',
+                'Anniversary': 'laptops',
+                'Holiday': 'home-decoration',
+                'Promotion': 'tablets',
+                'Farewell': 'mens-watches',
+                'ThankYou': 'home-decoration',
+                'Welcome': 'fragrances'
+            },
+            'Mentor': {
+                'Birthday': 'tablets',
+                'Anniversary': 'womens-watches',
+                'Holiday': 'furniture',
+                'Promotion': 'laptops',
+                'Farewell': 'home-decoration',
+                'ThankYou': 'mens-watches',
+                'Welcome': 'fragrances'
             }
         };
 
