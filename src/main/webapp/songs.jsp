@@ -199,7 +199,7 @@
                 songs.forEach(song => {
                     const card = document.createElement('div');
                     card.className = 'song-card';
-                    const sourceBadge = '<span style="color: #A238FF; font-size: 10px; font-weight: bold; background: rgba(162, 56, 255, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid #A238FF; margin-left: 5px;">TRENDING</span>';
+                    const sourceBadge = '<span style="color: #FF2D55; font-size: 10px; font-weight: bold; background: rgba(255, 45, 85, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid #FF2D55; margin-left: 5px;">TRENDING</span>';
                     
                     const previewBtn = song.preview ? 
                         `<button class="play-btn" onclick="togglePreview('\${song.preview}', this)">▶</button>` : 
@@ -210,10 +210,10 @@
                             <img src="\${song.img}" alt="\${song.album}" class="album-art">
                             <div style="position:absolute; bottom:15px; right:15px;">\${previewBtn}</div>
                         </div>
-                        <span class="spotify-tag" style="background: #A238FF;">DEEZER \${sourceBadge}</span>
+                        <span class="spotify-tag" style="background: #FF2D55;">APPLE MUSIC \${sourceBadge}</span>
                         <div class="song-title" title="\${song.title}">\${song.title}</div>
                         <div class="artist-name">\${song.artist}</div>
-                        <a href="\${song.url}" target="_blank" style="font-size:11px; color:#A238FF; text-decoration:none; margin-top:10px; display:inline-block; font-weight:700;">Open Track</a>
+                        <a href="\${song.url}" target="_blank" style="font-size:11px; color:#FF2D55; text-decoration:none; margin-top:10px; display:inline-block; font-weight:700;">Open Track</a>
                     `;
                     grid.appendChild(card);
                 });
