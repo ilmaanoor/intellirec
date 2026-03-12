@@ -111,24 +111,12 @@
         const toggleRegister = document.getElementById('toggle-register');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
-        const errorMsg = document.getElementById('auth-error');
-
-        function hideError() {
-            errorMsg.style.display = 'none';
-            errorMsg.innerText = '';
-        }
-
-        function showError(msg) {
-            errorMsg.innerText = msg;
-            errorMsg.style.display = 'block';
-        }
 
         function switchToLogin() {
             toggleLogin.classList.add('active');
             toggleRegister.classList.remove('active');
             loginForm.style.display = 'block';
             registerForm.style.display = 'none';
-            hideError();
         }
 
         function switchToRegister() {
@@ -136,105 +124,19 @@
             toggleLogin.classList.remove('active');
             registerForm.style.display = 'block';
             loginForm.style.display = 'none';
-            hideError();
         }
 
         toggleLogin.addEventListener('click', switchToLogin);
         toggleRegister.addEventListener('click', switchToRegister);
 
-        // Check for mode in URL
+        // Check for mode in URL (fallback for legacy links)
         window.addEventListener('DOMContentLoaded', () => {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('mode') === 'register') {
                 switchToRegister();
             }
         });
-
-        // Validation Helpers
-        function validateEmail(email) {
-            return String(email)
-                .toLowerCase()
-                .match(
-                    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-                );
-        }
-
-        // Firebase Logic
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            hideError();
-            
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            // Client-side validation
-            if (!email) {
-                showError("Please enter your email address.");
-                return;
-            }
-            if (!validateEmail(email)) {
-                showError("Please enter a valid email address.");
-                return;
-            }
-            if (!password) {
-                showError("Please enter your password.");
-                return;
-            }
-
-            firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(() => { window.location.href = 'intro.jsp'; })
-                .catch(err => { 
-                    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                        showError("User not found or incorrect password. Please try again.");
-                    } else if (err.code === 'auth/wrong-password') {
-                        showError("Incorrect password. Please try again.");
-                    } else if (err.code === 'auth/invalid-email') {
-                        showError("The email address is badly formatted.");
-                    } else {
-                        showError(err.message); 
-                    }
-                });
-        });
-
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            hideError();
-            
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-
-            // Client-side validation
-            if (!email) {
-                showError("Email address is required.");
-                return;
-            }
-            if (!validateEmail(email)) {
-                showError("Please enter a valid email address.");
-                return;
-            }
-            if (!password) {
-                showError("Password is required.");
-                return;
-            }
-            if (password.length < 6) {
-                showError("Password must be at least 6 characters long.");
-                return;
-            }
-
-            firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then(() => { window.location.href = 'intro.jsp'; })
-                .catch(err => {
-                    if (err.code === 'auth/email-already-in-use') {
-                        showError("This email is already in use. Please log in.");
-                    } else if (err.code === 'auth/weak-password') {
-                        showError("Password should be at least 6 characters.");
-                    } else if (err.code === 'auth/invalid-email') {
-                        showError("Please provide a valid email address.");
-                    } else {
-                        showError(err.message);
-                    }
-                });
-        });
     </script>
+    <script src="js/auth.js"></script>
 </body>
 </html>
