@@ -196,7 +196,7 @@
                             </p>
                             <div class="travel-footer">
                                 <div class="rating-dots">●●●●●</div>
-                                <a href="#" class="explore-link">Explore Details</a>
+                                <a href="\${dest.tripadvisorUrl}" target="_blank" class="explore-link">Explore Details</a>
                             </div>
                         </div>
                     `;
