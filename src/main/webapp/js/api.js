@@ -254,102 +254,120 @@ const ApiClient = {
     },
 
     /**
-     * Fetch Gift recommendations (DummyJSON for UI, Amazon IN for Purchasing)
-     * Maps Recipient & Occasion to a specific category and generates direct Amazon.in search links
+     * Fetch Gift recommendations (Multi-API engine for UI, Amazon IN for Purchasing)
+     * Maps Recipient & Occasion to specific categories across FakeStoreAPI or DummyJSON
      */
     async getGifts(recipient = 'Friend', occasion = 'Birthday') {
-        // Expanded category map for personal and professional combinations
-        const categoryMap = {
+        const categories = {
             'Friend': {
-                'Birthday': 'smartphones',
-                'Anniversary': 'sunglasses',
-                'Holiday': 'sports-accessories',
-                'Promotion': 'mens-watches',
-                'Farewell': 'fragrances',
-                'ThankYou': 'groceries', // often contains chocolates/gift baskets in DummyJSON
-                'Welcome': 'home-decoration'
+                'Birthday': { api: 'dummyjson', cat: 'smartphones' },
+                'Anniversary': { api: 'fakestore', cat: 'electronics' },
+                'Holiday': { api: 'dummyjson', cat: 'sports-accessories' },
+                'Promotion': { api: 'dummyjson', cat: 'mens-watches' },
+                'Farewell': { api: 'dummyjson', cat: 'fragrances' },
+                'ThankYou': { api: 'dummyjson', cat: 'groceries' },
+                'Welcome': { api: 'dummyjson', cat: 'home-decoration' }
             },
             'Partner': {
-                'Birthday': 'womens-watches', 
-                'Anniversary': 'womens-jewellery',
-                'Holiday': 'fragrances',
-                'Promotion': 'smartphones',
-                'Farewell': 'womens-bags',
-                'ThankYou': 'womens-jewellery',
-                'Welcome': 'tops'
+                'Birthday': { api: 'dummyjson', cat: 'womens-watches' }, 
+                'Anniversary': { api: 'fakestore', cat: 'jewelery' }, // New robust category
+                'Holiday': { api: 'dummyjson', cat: 'fragrances' },
+                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
+                'Farewell': { api: 'fakestore', cat: "women's clothing" }, // New robust category
+                'ThankYou': { api: 'fakestore', cat: 'jewelery' },
+                'Welcome': { api: 'dummyjson', cat: 'tops' }
             },
             'Family': {
-                'Birthday': 'home-decoration',
-                'Anniversary': 'furniture',
-                'Holiday': 'groceries',
-                'Promotion': 'tablets',
-                'Farewell': 'home-decoration',
-                'ThankYou': 'groceries',
-                'Welcome': 'furniture'
+                'Birthday': { api: 'dummyjson', cat: 'home-decoration' },
+                'Anniversary': { api: 'dummyjson', cat: 'furniture' },
+                'Holiday': { api: 'dummyjson', cat: 'groceries' },
+                'Promotion': { api: 'dummyjson', cat: 'tablets' },
+                'Farewell': { api: 'dummyjson', cat: 'home-decoration' },
+                'ThankYou': { api: 'dummyjson', cat: 'groceries' },
+                'Welcome': { api: 'dummyjson', cat: 'furniture' }
             },
             'Colleague': {
-                'Birthday': 'laptops',
-                'Anniversary': 'mens-watches',
-                'Holiday': 'tablets',
-                'Promotion': 'smartphones',
-                'Farewell': 'mens-shirts',
-                'ThankYou': 'fragrances',
-                'Welcome': 'tablets'
+                'Birthday': { api: 'dummyjson', cat: 'laptops' },
+                'Anniversary': { api: 'dummyjson', cat: 'mens-watches' },
+                'Holiday': { api: 'dummyjson', cat: 'tablets' },
+                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
+                'Farewell': { api: 'fakestore', cat: "men's clothing" }, // New robust category
+                'ThankYou': { api: 'dummyjson', cat: 'fragrances' },
+                'Welcome': { api: 'dummyjson', cat: 'tablets' }
             },
             'Manager': {
-                'Birthday': 'mens-watches',
-                'Anniversary': 'home-decoration',
-                'Holiday': 'laptops',
-                'Promotion': 'smartphones',
-                'Farewell': 'furniture',
-                'ThankYou': 'fragrances',
-                'Welcome': 'mens-shirts'
+                'Birthday': { api: 'dummyjson', cat: 'mens-watches' },
+                'Anniversary': { api: 'dummyjson', cat: 'home-decoration' },
+                'Holiday': { api: 'dummyjson', cat: 'laptops' },
+                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
+                'Farewell': { api: 'dummyjson', cat: 'furniture' },
+                'ThankYou': { api: 'dummyjson', cat: 'fragrances' },
+                'Welcome': { api: 'dummyjson', cat: 'mens-shirts' }
             },
             'Client': {
-                'Birthday': 'fragrances',
-                'Anniversary': 'laptops',
-                'Holiday': 'home-decoration',
-                'Promotion': 'tablets',
-                'Farewell': 'mens-watches',
-                'ThankYou': 'home-decoration',
-                'Welcome': 'fragrances'
+                'Birthday': { api: 'dummyjson', cat: 'fragrances' },
+                'Anniversary': { api: 'dummyjson', cat: 'laptops' },
+                'Holiday': { api: 'dummyjson', cat: 'home-decoration' },
+                'Promotion': { api: 'dummyjson', cat: 'tablets' },
+                'Farewell': { api: 'dummyjson', cat: 'mens-watches' },
+                'ThankYou': { api: 'dummyjson', cat: 'home-decoration' },
+                'Welcome': { api: 'dummyjson', cat: 'fragrances' }
             },
             'Mentor': {
-                'Birthday': 'tablets',
-                'Anniversary': 'womens-watches',
-                'Holiday': 'furniture',
-                'Promotion': 'laptops',
-                'Farewell': 'home-decoration',
-                'ThankYou': 'mens-watches',
-                'Welcome': 'fragrances'
+                'Birthday': { api: 'dummyjson', cat: 'tablets' },
+                'Anniversary': { api: 'dummyjson', cat: 'womens-watches' },
+                'Holiday': { api: 'dummyjson', cat: 'furniture' },
+                'Promotion': { api: 'dummyjson', cat: 'laptops' },
+                'Farewell': { api: 'dummyjson', cat: 'home-decoration' },
+                'ThankYou': { api: 'dummyjson', cat: 'mens-watches' },
+                'Welcome': { api: 'dummyjson', cat: 'fragrances' }
             }
         };
 
-        const safeRecipient = categoryMap[recipient] ? recipient : 'Friend';
-        const safeOccasion = categoryMap[safeRecipient][occasion] ? occasion : 'Birthday';
-        const category = categoryMap[safeRecipient][safeOccasion];
+        const safeRecipient = categories[recipient] ? recipient : 'Friend';
+        const safeOccasion = categories[safeRecipient][occasion] ? occasion : 'Birthday';
+        const target = categories[safeRecipient][safeOccasion];
 
-        const dummyUrl = `https://dummyjson.com/products/category/${category}`;
-        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(dummyUrl)}`;
-
-        console.log(`Fetching real-time gifts for ${recipient} on ${occasion} (Category: ${category})...`);
+        console.log(`Fetching real-time gifts for ${recipient} on ${occasion} (API: ${target.api}, Category: ${target.cat})...`);
+        
         try {
+            let targetUrl = '';
+            if (target.api === 'fakestore') {
+                targetUrl = `https://fakestoreapi.com/products/category/${encodeURIComponent(target.cat)}`;
+            } else {
+                targetUrl = `https://dummyjson.com/products/category/${encodeURIComponent(target.cat)}`;
+            }
+
+            const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(targetUrl)}`;
             const res = await fetch(proxyUrl);
             const data = await res.json();
-            if (data.products) {
-                return data.products.slice(0, 12).map(p => ({
+            
+            let items = [];
+
+            // Unify data formats
+            if (target.api === 'fakestore' && Array.isArray(data)) {
+                items = data.map(p => ({
+                    id: p.id,
+                    name: p.title,
+                    category: p.category,
+                    price: `₹${Math.round(p.price * 83).toLocaleString('en-IN')}`,
+                    img: p.image,
+                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title)}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
+                }));
+            } else if (target.api === 'dummyjson' && data.products) {
+                items = data.products.map(p => ({
                     id: p.id,
                     name: p.title,
                     category: p.category.replace('-', ' '),
                     price: `₹${Math.round(p.price * 83).toLocaleString('en-IN')}`,
                     img: p.thumbnail,
-                    // Dynamically generate an Amazon India search link for this specific item
-                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title + ' ' + p.brand)}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
+                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title + ' ' + (p.brand || ''))}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
                 }));
             }
-            return [];
+
+            return items.slice(0, 12);
         } catch (e) {
-            console.error('Gifts API Exception:', e);
+            console.error('Multi-API Gifts Exception:', e);
             return [];
         }
     },
