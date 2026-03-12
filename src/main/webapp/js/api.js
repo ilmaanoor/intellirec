@@ -158,29 +158,50 @@ const ApiClient = {
      * Fetch Top/Trending Songs based on Language & Mood using iTunes API (Zero Config Real-Time)
      */
     async getSongs(language = 'English', mood = 'Happy') {
-        // Map languages to search keywords
-        const langMap = {
-            'English': 'pop hit',
-            'Hindi': 'bollywood',
-            'Korean': 'k-pop',
-            'Spanish': 'latin',
-            'Tamil': 'tamil'
+        // Highly targeted search queries for every combination to ensure results and top hits
+        const queryMap = {
+            'English': {
+                'Happy': 'pop dance hits upbeat trending',
+                'Chill': 'acoustic chill pop top hits',
+                'Focus': 'study focus pop instrumental hits',
+                'Workout': 'workout gym pop hits energy',
+                'Romantic': 'romantic pop love top hits'
+            },
+            'Hindi': {
+                'Happy': 'bollywood dance party top hits',
+                'Chill': 'bollywood lo-fi chill trending',
+                'Focus': 'bollywood instrumental hits',
+                'Workout': 'bollywood workout energy hits',
+                'Romantic': 'bollywood romantic love hits'
+            },
+            'Korean': {
+                'Happy': 'k-pop upbear dance top hits',
+                'Chill': 'k-pop chill r&b trending',
+                'Focus': 'k-pop instrumental study',
+                'Workout': 'k-pop workout gym hits',
+                'Romantic': 'k-pop love romance hits'
+            },
+            'Spanish': {
+                'Happy': 'latin pop reggaeton dance hits',
+                'Chill': 'latin acoustic chill hits',
+                'Focus': 'latin guitar study trending',
+                'Workout': 'latin gym reggaeton hits',
+                'Romantic': 'latin romance bachata top hits'
+            },
+            'Tamil': {
+                'Happy': 'tamil kuthu dance party hits',
+                'Chill': 'tamil melody chill trending',
+                'Focus': 'tamil instrumental flute hits',
+                'Workout': 'tamil workout motivation hits',
+                'Romantic': 'tamil romantic love top hits'
+            }
         };
 
-        // Map moods to keywords
-        const moodMap = {
-            'Happy': 'happy upbeat',
-            'Chill': 'chill acoustic',
-            'Focus': 'study focus',
-            'Workout': 'workout energy',
-            'Romantic': 'love romance'
-        };
+        // Fallback to a generic query if somehow not mapped
+        const safeLanguage = queryMap[language] ? language : 'English';
+        const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
+        const query = queryMap[safeLanguage][safeMood];
 
-        const langQuery = langMap[language] || language;
-        const moodQuery = moodMap[mood] || mood;
-        
-        // Combine for iTunes search endpoint
-        const query = `${langQuery} ${moodQuery}`;
         const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=12`;
         const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
 
