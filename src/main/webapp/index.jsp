@@ -11,7 +11,7 @@
             <a href="index.jsp" class="logo">Intelli<span>Rec</span></a>
             <nav class="nav-links">
                 <a href="login.jsp" id="auth-link">Login</a>
-                <a href="login.jsp" class="btn-primary" style="padding: 0.5rem 1.5rem; border-radius: 10px;">Sign Up</a>
+                <a href="login.jsp?mode=register" class="btn-primary" style="padding: 0.5rem 1.5rem; border-radius: 10px;">Sign Up</a>
             </nav>
         </header>
 
@@ -19,7 +19,7 @@
             <h1>Personalized AI <br> Recommendations For <span>Everything</span>.</h1>
             <p>Movies, Songs, Gifts and more - all in one place. Experience discovery like never before.</p>
             <div style="margin-top: 3rem;">
-                <a href="login.jsp" class="btn btn-primary">Get Started Now</a>
+                <a href="login.jsp?mode=register" class="btn btn-primary">Get Started Now</a>
             </div>
         </section>
 
