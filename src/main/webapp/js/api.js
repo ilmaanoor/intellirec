@@ -161,43 +161,54 @@ const ApiClient = {
         // Extremely targeted search queries to force iTunes to return specific languages
         const queryMap = {
             'English': {
-                'Happy': 'english pop dance upbeat hits',
-                'Chill': 'english acoustic chill pop hits',
-                'Focus': 'english study focus pop hits',
-                'Workout': 'english workout gym pop hits',
-                'Romantic': 'english romantic pop love hits'
+                'Happy': 'pop dance hits upbeat',
+                'Chill': 'acoustic chill pop hits',
+                'Focus': 'study focus pop hits',
+                'Workout': 'workout gym pop hits',
+                'Romantic': 'romantic pop love hits'
             },
             'Hindi': {
-                'Happy': 'hindi bollywood dance party hits',
-                'Chill': 'hindi bollywood lo-fi chill',
+                'Happy': 'hindi bollywood party hit',
+                'Chill': 'hindi bollywood chill lofi',
                 'Focus': 'hindi bollywood instrumental',
-                'Workout': 'hindi bollywood workout energy',
+                'Workout': 'hindi bollywood workout',
                 'Romantic': 'hindi bollywood romantic love'
             },
             'Korean': {
-                'Happy': 'korean k-pop dance upbeat hits',
-                'Chill': 'korean k-pop chill r&b',
-                'Focus': 'korean k-pop instrumental',
-                'Workout': 'korean k-pop workout gym',
-                'Romantic': 'korean k-pop love romance'
+                'Happy': 'k-pop dance hit',
+                'Chill': 'k-pop chill r&b',
+                'Focus': 'k-pop instrumental study',
+                'Workout': 'k-pop workout gym',
+                'Romantic': 'k-pop romance hit'
             },
             'Chinese': {
-                'Happy': 'chinese mandopop dance top hits',
-                'Chill': 'chinese mandopop chill acoustic',
-                'Focus': 'chinese instrumental guzheng focus',
-                'Workout': 'chinese hip hop workout energy',
-                'Romantic': 'chinese mandopop romantic love'
+                'Happy': 'c-pop mandopop dance hit',
+                'Chill': 'c-pop mandopop chill',
+                'Focus': 'c-pop instrumental focus',
+                'Workout': 'c-pop workout',
+                'Romantic': 'c-pop mandopop romance'
             },
             'Tamil': {
-                'Happy': 'tamil kuthu dance party hits',
-                'Chill': 'tamil melody chill acoustic',
-                'Focus': 'tamil instrumental flute',
+                'Happy': 'tamil punch hit',
+                'Chill': 'tamil melody chill',
+                'Focus': 'tamil flute instrumental',
                 'Workout': 'tamil workout motivation',
-                'Romantic': 'tamil romantic love hits'
+                'Romantic': 'tamil romantic love'
             }
         };
 
+        // Specific country codes to force iTunes regional catalogs
+        const countryMap = {
+            'English': 'US',
+            'Hindi': 'IN',
+            'Korean': 'KR',
+            'Chinese': 'TW',
+            'Tamil': 'IN'
+        };
+
         let query;
+        let country = 'US'; // default
+        
         if (artist && artist.trim() !== '') {
             query = `${artist.trim()} top hits best`;
         } else {
@@ -205,12 +216,14 @@ const ApiClient = {
             const safeLanguage = queryMap[language] ? language : 'English';
             const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
             query = queryMap[safeLanguage][safeMood];
+            country = countryMap[safeLanguage];
         }
 
-        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&media=music&entity=song&limit=12`;
+        // Add explicit country parameter and sorting for most recent/popular
+        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${country}&media=music&entity=song&limit=12`;
         const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
 
-        console.log(`Searching iTunes for: ${query}...`);
+        console.log(`Searching iTunes for: ${query} in ${country}...`);
         try {
             const res = await fetch(proxyUrl);
             const data = await res.json();
