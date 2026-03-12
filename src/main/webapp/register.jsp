@@ -1,56 +1,55 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-    <!DOCTYPE html>
-    <html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register - Intellirec AI</title>
+    <link rel="stylesheet" href="css/style_v1.css">
+    <style>
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.jsp" class="logo">Intelli<span>Rec</span></a>
+            <nav class="nav-links">
+                <a href="index.jsp">Home</a>
+                <a href="login.jsp">Login</a>
+            </nav>
+        </header>
 
-    <head>
-        <title>Register - IntelliRec</title>
-        <link rel="stylesheet" href="css/style.css">
-    </head>
-
-    <body>
-        <div class="container" style="max-width: 500px; margin-top: 100px;">
-            <div class="glass-panel">
-                <h2 style="text-align: center;">Join IntelliRec</h2>
-                <form id="register-form">
-                    <div class="form-group">
-                        <label>Full Name</label>
-                        <input type="text" id="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Email</label>
-                        <input type="email" id="email" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <input type="password" id="password" class="form-control" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary" style="width:100%;">Create Account</button>
-                </form>
-                <p style="text-align: center; margin-top: 1rem;">
-                    Already have an account? <a href="login.jsp" style="color: #667eea;">Login</a>
-                </p>
-            </div>
+        <div class="glass-panel">
+            <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 2rem;">Join Us</h2>
+            <div id="auth-error" class="error-message"></div>
+            <form id="register-form">
+                <div class="form-group">
+                    <label for="reg-email">Email Address</label>
+                    <input type="email" id="reg-email" class="form-control" placeholder="name@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="reg-password">Create Password</label>
+                    <input type="password" id="reg-password" class="form-control" placeholder="Min 6 characters" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Create Account</button>
+            </form>
+            <p style="text-align: center; margin-top: 2rem; color: var(--text-muted);">
+                Already have an account? <a href="login.jsp" style="color: var(--primary-dark); font-weight: 600;">Login here</a>
+            </p>
         </div>
+    </div>
 
-        <script src="js/firebase-app-compat.js"></script>
-        <script src="js/firebase-auth-compat.js"></script>
-        <script src="js/firebase-config.js"></script>
-        <script>
-            document.getElementById('register-form').addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-
-                auth.createUserWithEmailAndPassword(email, password)
-                    .then((userCredential) => {
-                        alert("Registration Successful!");
-                        window.location.href = "dashboard.jsp";
-                    })
-                    .catch((error) => {
-                        alert(error.message);
-                    });
-            });
-        </script>
-    </body>
-
-    </html>
+    <script src="js/firebase-app-compat.js"></script>
+    <script src="js/firebase-auth-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html>
