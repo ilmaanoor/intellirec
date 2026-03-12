@@ -1,11 +1,22 @@
 // Firebase Auth handling for Intellirec AI
 document.addEventListener('DOMContentLoaded', () => {
+    // --- 1. UI ELEMENTS ---
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
-    const logoutBtn = document.getElementById('logout-btn');
+    const toggleLogin = document.getElementById('toggle-login');
+    const toggleRegister = document.getElementById('toggle-register');
     const errorMsg = document.getElementById('auth-error');
+    const logoutBtn = document.getElementById('logout-btn');
 
+    console.log("Auth System Initialized", {
+        hasLogin: !!loginForm,
+        hasRegister: !!registerForm,
+        hasToggle: !!toggleLogin
+    });
+
+    // --- 2. UI HELPERS ---
     function showError(msg) {
+        console.error("Auth Error:", msg);
         if (errorMsg) {
             errorMsg.innerText = msg;
             errorMsg.style.display = 'block';
@@ -17,36 +28,74 @@ document.addEventListener('DOMContentLoaded', () => {
     function hideError() {
         if (errorMsg) {
             errorMsg.style.display = 'none';
-            errorMsg.innerText = '';
         }
     }
 
-    function validateEmail(email) {
-        return String(email)
-            .toLowerCase()
-            .match(
-                /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
-            );
+    function setBtnState(formId, isLoading) {
+        const btn = document.querySelector(`#${formId} .btn-submit`);
+        if (btn) {
+            if (isLoading) {
+                btn.disabled = true;
+                btn.dataset.original = btn.innerText;
+                btn.innerText = formId === 'login-form' ? 'Signing In...' : 'Registering...';
+            } else {
+                btn.disabled = false;
+                btn.innerText = btn.dataset.original || (formId === 'login-form' ? 'Sign In' : 'Sign Up');
+            }
+        }
     }
 
+    // --- 3. TOGGLE LOGIC ---
+    function switchToLogin() {
+        if (!loginForm || !registerForm) return;
+        toggleLogin.classList.add('active');
+        toggleRegister.classList.remove('active');
+        loginForm.style.display = 'block';
+        registerForm.style.display = 'none';
+        hideError();
+    }
+
+    function switchToRegister() {
+        if (!loginForm || !registerForm) return;
+        toggleRegister.classList.add('active');
+        toggleLogin.classList.remove('active');
+        registerForm.style.display = 'block';
+        loginForm.style.display = 'none';
+        hideError();
+    }
+
+    if (toggleLogin) toggleLogin.addEventListener('click', switchToLogin);
+    if (toggleRegister) toggleRegister.addEventListener('click', switchToRegister);
+
+    // Initial check for URL mode
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('mode') === 'register') {
+        switchToRegister();
+    }
+
+    // --- 4. AUTH LOGIC ---
+    function validateEmail(email) {
+        return /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email);
+    }
+
+    // Handle Login
     if (loginForm) {
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             hideError();
-            
-            // Get values using the IDs present in login.jsp
-            const emailField = document.getElementById('login-email') || document.getElementById('email');
-            const passwordField = document.getElementById('login-password') || document.getElementById('password');
-            
+
+            const emailField = document.getElementById('email');
+            const passwordField = document.getElementById('password');
+
+            if (!emailField || !passwordField) {
+                showError("Critical Error: Form fields not found.");
+                return;
+            }
+
             const email = emailField.value.trim();
             const password = passwordField.value;
 
-            // Client-side validation
-            if (!email) {
-                showError("Please enter your email address.");
-                return;
-            }
-            if (!validateEmail(email)) {
+            if (!email || !validateEmail(email)) {
                 showError("Please enter a valid email address.");
                 return;
             }
@@ -55,15 +104,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            setBtnState('login-form', true);
+            console.log("Attempting Sign In...");
+
             firebase.auth().signInWithEmailAndPassword(email, password)
-                .then(() => { window.location.href = 'intro.jsp'; })
+                .then(() => {
+                    console.log("Sign In Success!");
+                    window.location.href = 'intro.jsp';
+                })
                 .catch(err => {
-                    if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                        showError("User not found or incorrect password. Please try again.");
-                    } else if (err.code === 'auth/wrong-password') {
-                        showError("Incorrect password. Please try again.");
-                    } else if (err.code === 'auth/invalid-email') {
-                        showError("The email address is badly formatted.");
+                    setBtnState('login-form', false);
+                    console.error("Firebase Error:", err.code, err.message);
+                    if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                        showError("Incorrect email or password.");
                     } else {
                         showError(err.message);
                     }
@@ -71,41 +124,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle Register
     if (registerForm) {
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
             hideError();
-            
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
 
-            // Client-side validation
-            if (!email) {
-                showError("Email address is required.");
+            const emailField = document.getElementById('reg-email');
+            const passwordField = document.getElementById('reg-password');
+
+            if (!emailField || !passwordField) {
+                showError("Critical Error: Registration fields not found.");
                 return;
             }
-            if (!validateEmail(email)) {
+
+            const email = emailField.value.trim();
+            const password = passwordField.value;
+
+            if (!email || !validateEmail(email)) {
                 showError("Please enter a valid email address.");
                 return;
             }
-            if (!password) {
-                showError("Password is required.");
-                return;
-            }
             if (password.length < 6) {
-                showError("Password must be at least 6 characters long.");
+                showError("Search password must be at least 6 characters.");
                 return;
             }
 
+            setBtnState('register-form', true);
+            console.log("Attempting Registration...");
+
             firebase.auth().createUserWithEmailAndPassword(email, password)
-                .then(() => { window.location.href = 'intro.jsp'; })
+                .then(() => {
+                    console.log("Registration Success!");
+                    window.location.href = 'intro.jsp';
+                })
                 .catch(err => {
+                    setBtnState('register-form', false);
+                    console.error("Firebase Error:", err.code, err.message);
                     if (err.code === 'auth/email-already-in-use') {
-                        showError("This email is already in use. Please log in.");
-                    } else if (err.code === 'auth/weak-password') {
-                        showError("Password should be at least 6 characters.");
-                    } else if (err.code === 'auth/invalid-email') {
-                        showError("Please provide a valid email address.");
+                        showError("This email is already registered.");
                     } else {
                         showError(err.message);
                     }
@@ -113,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Handle Logout
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();

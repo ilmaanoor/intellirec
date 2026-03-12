@@ -6,27 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IntelliRec AI - Login</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
     <style>
-        :root {
-            --bg-color: #FFFDF2; /* Soft cream/yellow background */
-            --primary: #F9A825; /* Warm orange/yellow */
-            --text-dark: #4E342E; /* Dark brownish for text */
-            --text-muted: #8D6E63;
-            --input-bg: #F5F5F5;
-            --card-shadow: 0 10px 40px rgba(0,0,0,0.05);
-            --transition: all 0.3s ease;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
             height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            color: var(--text-dark);
         }
 
         .auth-card {
@@ -90,7 +76,7 @@
             font-weight: 600;
             cursor: pointer;
             border-radius: 8px;
-            transition: var(--transition);
+            transition: var(--transition-smooth);
             color: var(--text-muted);
         }
 
@@ -117,13 +103,13 @@
         .form-control {
             width: 100%;
             padding: 12px 16px;
-            background: var(--input-bg);
+            background: var(--gray-light);
             border: 1px solid transparent;
             border-radius: 10px;
             font-size: 14px;
             font-family: 'Inter', sans-serif;
             color: var(--text-dark);
-            transition: var(--transition);
+            transition: var(--transition-smooth);
         }
 
         .form-control:focus {
@@ -143,7 +129,7 @@
             font-size: 16px;
             font-weight: 700;
             cursor: pointer;
-            transition: var(--transition);
+            transition: var(--transition-smooth);
             margin-top: 10px;
         }
 
@@ -175,6 +161,7 @@
             display: flex;
             align-items: center;
             gap: 5px;
+            z-index: 10;
         }
 
         .back-home:hover { color: var(--primary); }
@@ -208,12 +195,12 @@
         <!-- Login Form -->
         <form id="login-form">
             <div class="form-group">
-                <label for="login-email">Email</label>
-                <input type="email" id="login-email" class="form-control" placeholder="Enter your email" required>
+                <label for="email">Email</label>
+                <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
             </div>
             <div class="form-group">
-                <label for="login-password">Password</label>
-                <input type="password" id="login-password" class="form-control" placeholder="Enter your password" required>
+                <label for="password">Password</label>
+                <input type="password" id="password" class="form-control" placeholder="Enter your password" required>
             </div>
             <button type="submit" id="btn-login" class="btn-submit">Sign In</button>
         </form>
@@ -236,36 +223,6 @@
     <script src="js/firebase-app-compat.js"></script>
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
-    <script>
-        const toggleLogin = document.getElementById('toggle-login');
-        const toggleRegister = document.getElementById('toggle-register');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-
-        function switchToLogin() {
-            toggleLogin.classList.add('active');
-            toggleRegister.classList.remove('active');
-            loginForm.style.display = 'block';
-            registerForm.style.display = 'none';
-        }
-
-        function switchToRegister() {
-            toggleRegister.classList.add('active');
-            toggleLogin.classList.remove('active');
-            registerForm.style.display = 'block';
-            loginForm.style.display = 'none';
-        }
-
-        toggleLogin.addEventListener('click', switchToLogin);
-        toggleRegister.addEventListener('click', switchToRegister);
-
-        window.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('mode') === 'register') {
-                switchToRegister();
-            }
-        });
-    </script>
     <script src="js/auth.js"></script>
 </body>
 </html>

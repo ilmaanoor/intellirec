@@ -1,0 +1,163 @@
+/* Global Design System for IntelliRec AI */
+:root {
+    --bg-cream: #FFFDF2;
+    --primary: #F9A825;
+    --primary-light: #FFB74D;
+    --primary-dark: #F57F17;
+    --text-dark: #4E342E;
+    --text-muted: #8D6E63;
+    --white: #FFFFFF;
+    --gray-light: #F5F5F5;
+    --card-shadow: 0 10px 40px rgba(0,0,0,0.05);
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --transition-smooth: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Outfit', 'Inter', sans-serif;
+    background-color: var(--bg-cream);
+    color: var(--text-dark);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* --- Typography --- */
+h1, h2, h3 { font-weight: 700; color: var(--text-dark); }
+p { color: var(--text-muted); font-size: 1rem; }
+
+/* --- Eye-Catching Navigation --- */
+.navbar-global {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 1000px;
+    height: 64px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    border-radius: 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 30px;
+    z-index: 2000;
+    box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: var(--transition-smooth);
+}
+
+.navbar-global:hover {
+    width: 92%;
+    box-shadow: 0 8px 40px rgba(249, 168, 37, 0.15);
+}
+
+.nav-brand {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-brand span { color: var(--text-dark); }
+
+.nav-links-global {
+    display: flex;
+    gap: 25px;
+    list-style: none;
+}
+
+.nav-links-global a {
+    text-decoration: none;
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: var(--transition-smooth);
+    padding: 8px 12px;
+    border-radius: 20px;
+}
+
+.nav-links-global a:hover, .nav-links-global a.active {
+    color: var(--primary);
+    background: rgba(249, 168, 37, 0.08);
+}
+
+/* User Identity in Nav */
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.nav-user img {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+}
+
+.btn-logout-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: white;
+    text-decoration: none;
+    transition: var(--transition-smooth);
+}
+
+.btn-logout-nav:hover {
+    background: var(--primary-dark);
+    transform: rotate(90deg);
+}
+
+/* --- Common Components --- */
+.btn-primary-site {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-primary-site:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(249, 168, 37, 0.4);
+    filter: brightness(1.05);
+}
+
+.glass-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+/* --- Footer --- */
+.footer-site {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .nav-links-global { display: none; }
+    .navbar-global { padding: 0 20px; }
+}
