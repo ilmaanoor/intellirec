@@ -48,8 +48,7 @@ const ApiClient = {
                 language: langCode,
                 sort_by: 'popularity.desc',
                 with_watch_providers: API_CONFIG.NETFLIX_PROVIDER_ID,
-                watch_region: 'IN', // Optimized for the requested languages
-                'vote_count.gte': 50 // Lowered threshold for broader results
+                watch_region: 'IN'
             };
 
             if (genreId) params.with_genres = genreId;
@@ -67,8 +66,19 @@ const ApiClient = {
             console.log('TMDB Response:', data);
 
             if (!data.results || data.results.length === 0) {
-                console.warn('No real-time results found for this filter. Falling back to simulation.');
-                return this._getSimulatedMovies(genre);
+                console.warn('No Netflix results. Fetching general trending results...');
+                delete params.with_watch_providers;
+                delete params.watch_region;
+                url.search = new URLSearchParams(params).toString();
+                const fallbackResponse = await fetch(url);
+                const fallbackData = await fallbackResponse.json();
+                return (fallbackData.results || []).slice(0, 12).map(m => ({
+                    id: m.id,
+                    title: m.title,
+                    genre: genre,
+                    rating: m.vote_average.toFixed(1),
+                    img: m.poster_path ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
+                }));
             }
 
             return data.results.slice(0, 12).map(m => ({

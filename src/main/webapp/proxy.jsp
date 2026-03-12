@@ -4,7 +4,7 @@
     // IntelliRec Movie API Proxy
     // Bypasses browser-side "Failed to fetch" errors by making requests from the server.
     
-    String apiURL = "https://api.themoviedb.org/3/discover/movie";
+    String apiURL = "https://api.tmdb.org/3/discover/movie";
     String queryString = request.getQueryString();
     
     if (queryString != null) {

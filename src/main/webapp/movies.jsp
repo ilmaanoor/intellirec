@@ -179,7 +179,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=11.5"></script>
+    <script src="js/api.js?v=12.0"></script>
     <script>
         // User Sync
         firebase.auth().onAuthStateChanged((user) => {
