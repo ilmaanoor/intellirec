@@ -213,46 +213,42 @@ const ApiClient = {
     },
 
     /**
-     * TRAVEL - Real-time Wikipedia Search
+     * Safety Filter for Travel Content
+     */
+    _isSafeTravelContent(text) {
+        if (!text) return true;
+        const lowText = text.toLowerCase();
+        const blacklist = [
+            'porn', 'sex', 'nude', 'adult', 'erotic', 'vulgar', 'hentai', 'x-rated', 
+            'offensive', 'explicit', 'dating', 'fetish', 'lingerie', 'glamour', 
+            'sensual', 'escort', 'massage', 'stripper', 'underwear'
+        ];
+        return !blacklist.some(word => lowText.includes(word));
+    },
+
+    /**
+     * TRAVEL - Real-time Wikipedia Search with Safety Filters
      */
     async getTravel(purpose = 'Vacation', searchQuery = '') {
-        const wikiCategories = {
-            'Vacation':  ['beach resort', 'tropical island'],
-            'Adventure': ['mountain trekking', 'national park'],
-            'Culture':   ['historic city', 'heritage site'],
-            'Food':      ['food capital', 'culinary city']
-        };
-
         let term = searchQuery;
         if (!term || term.trim() === '') {
-            const categories = wikiCategories[purpose] || wikiCategories['Vacation'];
-            term = categories[Math.floor(Math.random() * categories.length)];
+            term = purpose;
         }
 
-        console.log(`[Travel] Wikipedia Search for: "${term}"...`);
+        console.log(`[Travel] TripAdvisor Scraper Request for: "${term}"...`);
 
         try {
-            const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term + ' travel')}&srnamespace=0&srlimit=20&format=json&origin=*`;
-            const searchRes = await fetch(wikiSearchUrl);
-            const searchData = await searchRes.json();
-            const articles = (searchData.query?.search || []).sort(() => 0.5 - Math.random()).slice(0, 8);
-
-            const results = [];
-            for (const article of articles) {
-                if (results.length >= 6) break;
-                try {
-                    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(article.title)}&prop=pageimages|extracts&exchars=200&exintro=true&format=json&pithumbsize=1000&origin=*`;
-                    const imgRes = await fetch(imgUrl);
-                    const imgData = await imgRes.json();
-                    const page = Object.values(imgData.query.pages)[0];
-
-                    if (page && page.thumbnail) {
-                    }
-                } catch (e) {}
-            }
-            return results;
+            // Updated to call local travel-search servlet powered by TripAdvisor scraper
+            const url = `/intellirec/travel-search?query=${encodeURIComponent(term)}&purpose=${encodeURIComponent(purpose)}`;
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('Search failed');
+            
+            const results = await response.json();
+            
+            // Apply client-side safety filter just in case
+            return results.filter(dest => this._isSafeTravelContent(dest.place) && this._isSafeTravelContent(dest.description));
         } catch (e) {
-            console.error('[Travel] Exception:', e);
+            console.error('[Travel] Scraper Exception:', e);
             return [];
         }
     }
