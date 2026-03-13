@@ -102,6 +102,10 @@
     </div>
 
     <div class="filter-section">
+        <div class="filter-group" style="flex: 1.5;">
+            <label>Universal Search</label>
+            <input type="text" id="gift-search" class="form-control" placeholder="e.g. Sony PS5, Lego Star Wars..." style="width: 100%;">
+        </div>
         <div class="filter-group" style="flex: 1;">
             <label>Recipient</label>
             <select id="recipient-filter" class="form-control">
@@ -144,7 +148,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
+    <script src="js/api.js?v=16.0"></script>
     <script>
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -157,13 +161,19 @@
             const grid = document.getElementById('gift-grid');
             const recipient = document.getElementById('recipient-filter').value;
             const occasion = document.getElementById('occasion-filter').value;
+            const query = document.getElementById('gift-search').value;
 
-            grid.innerHTML = '<div class="loading-state">Scanning millions of options...</div>';
+            grid.innerHTML = '<div class="loading-state">Scanning live marketplaces...</div>';
 
             try {
-                const gifts = await ApiClient.getGifts(recipient, occasion);
+                const gifts = await ApiClient.getGifts(recipient, occasion, query);
                 grid.innerHTML = '';
                 
+                if (!gifts || gifts.length === 0) {
+                    grid.innerHTML = '<div class="loading-state">No matches found. Try a different search term.</div>';
+                    return;
+                }
+
                 gifts.forEach(gift => {
                     const card = document.createElement('div');
                     card.className = 'gift-card';
@@ -171,23 +181,25 @@
                     
                     card.innerHTML = `
                         <img src="\${gift.img}" alt="\${gift.name}" class="gift-thumb">
-                        <span class="amazon-tag">AMAZON IN \${sourceBadge}</span>
+                        <span class="amazon-tag">\${gift.category} \${sourceBadge}</span>
                         <div class="gift-name">\${gift.name}</div>
-                        <div style="font-size:13px; color:var(--text-muted); margin-bottom:15px; text-transform: capitalize;">\${gift.category}</div>
                         <div class="gift-price">\${gift.price}</div>
                         <a href="\${gift.amazonUrl}" target="_blank" style="margin-top: 15px; background: #FF9900; color: white; padding: 10px 15px; border-radius: 8px; font-size: 14px; font-weight: 700; text-decoration: none; width: 100%; display: inline-block;">
-                            Buy on Amazon.in
+                            View on Store
                         </a>
                     `;
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = '<div class="loading-state">Failed to fetch gifts. Please try again.</div>';
+                grid.innerHTML = '<div class="loading-state">Scraper Offline. Please check your internet.</div>';
             }
         }
 
         document.getElementById('recipient-filter').addEventListener('change', loadGifts);
         document.getElementById('occasion-filter').addEventListener('change', loadGifts);
+        document.getElementById('gift-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadGifts();
+        });
         loadGifts();
     </script>
 </body>

@@ -122,9 +122,9 @@
                 </select>
             </div>
             <div class="filter-group" style="flex: 1.2;">
-                <label>Optional: specific Artist</label>
+                <label>Universal Search</label>
                 <div style="position: relative;">
-                    <input type="text" id="artist-search" class="form-control" placeholder="e.g. Taylor Swift" style="padding-left: 35px;">
+                    <input type="text" id="artist-search" class="form-control" placeholder="e.g. Arijit Singh, Rock, 2024 hits..." style="padding-left: 35px;">
                     <svg style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.5;" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
                 </div>
             </div>
@@ -145,7 +145,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=2.2"></script>
+    <script src="js/api.js?v=16.0"></script>
     <script>
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {

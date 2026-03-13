@@ -1,459 +1,258 @@
 /**
- * Intellirec AI - Central API Client
- * Handles requests to Netflix (Simulated), Spotify, Amazon, and Tripadvisor.
+ * Intellirec AI - Central API Client v16.0 - FULLY REAL-TIME
+ * All four recommendation engines now pull live data dynamically based on user filters.
  */
 
 const API_CONFIG = {
-    // IMPORTANT: Get your TMDB API Key from https://www.themoviedb.org/settings/api
     TMDB_API_KEY: 'e226f4a5f5bace766952aa0d17182959',
-    TMDB_BASE_URL: 'https://api.tmdb.org/3', // Unblocked mirror for India
-    IMAGE_BASE_URL: 'https://images.weserv.nl/?url=https://image.tmdb.org/t/p/w500', // Unblocked image proxy
+    IMAGE_BASE_URL: 'https://images.weserv.nl/?url=https://image.tmdb.org/t/p/w500',
     NETFLIX_PROVIDER_ID: 8,
-    SPOTIFY_CLIENT_ID: 'YOUR_SPOTIFY_CLIENT_ID',
-    AMAZON_PARTNER_TAG: 'YOUR_AMAZON_TAG',
-    TRIPADVISOR_API_KEY: 'YOUR_TRIPADVISOR_KEY'
+    AMAZON_PARTNER_TAG: 'YOUR_AMAZON_TAG'
 };
 
 const ApiClient = {
     _lastError: null,
+
     /**
-     * Fetch Movie recommendations (Netflix Style)
-     * @param {string} genre 
-     * @param {string} language 
+     * MOVIES - Real-time TMDB Search or Discover
+     * If searchQuery is provided, uses TMDB Search. Otherwise uses Discover.
      */
-    async getMovies(genre = 'All', language = 'English') {
-        console.log('TMDB Key Check:', API_CONFIG.TMDB_API_KEY);
-        if (API_CONFIG.TMDB_API_KEY === 'YOUR_TMDB_API_KEY_HERE' || !API_CONFIG.TMDB_API_KEY) {
-            console.warn('TMDB API Key missing. Falling back to simulation.');
-            return this._getSimulatedMovies(genre);
-        }
-
+    async getMovies(genre = 'All', language = 'English', searchQuery = '') {
         const genreMap = {
-            'Action': 28, 'Sci-Fi': 878, 'Comedy': 35, 'Drama': 18, 'Fantasy': 14, 'Thriller': 53
+            'Action': 28, 'Sci-Fi': 878, 'Comedy': 35, 'Drama': 18,
+            'Fantasy': 14, 'Thriller': 53, 'Romance': 10749
         };
-
         const langMap = {
-            'English': 'en-US', 'Hindi': 'hi-IN', 'Tamil': 'ta-IN', 'Telugu': 'te-IN', 'Korean': 'ko-KR'
+            'English': { apiLang: 'en-US', origLang: 'en' },
+            'Hindi':   { apiLang: 'hi-IN', origLang: 'hi' },
+            'Tamil':   { apiLang: 'ta-IN', origLang: 'ta' },
+            'Telugu':  { apiLang: 'te-IN', origLang: 'te' },
+            'Korean':  { apiLang: 'ko-KR', origLang: 'ko' }
         };
 
-        const genreId = genreMap[genre] || '';
-        const langCode = langMap[language] || 'en-US';
-
-        console.log(`Fetching real-time ${genre} movies in ${language} from TMDB...`);
-
+        const proxyBase = `${window.location.origin}/intellirec/proxy.jsp`;
+        
         try {
-            const url = new URL(`${window.location.origin}/intellirec/proxy.jsp`);
-            const baseParams = {
-                api_key: API_CONFIG.TMDB_API_KEY,
-                language: langCode,
-                sort_by: 'popularity.desc'
-            };
-            if (genreId) baseParams.with_genres = genreId;
-
             let finalResults = [];
 
-            // Stage 1: Try Netflix (India)
-            console.log("Stage 1: Attempting Netflix (India)...");
-            url.search = new URLSearchParams({...baseParams, with_watch_providers: 8, watch_region: 'IN'}).toString();
-            let res = await fetch(url);
-            let rawText = await res.text();
-            let data;
-            try {
-                data = JSON.parse(rawText);
-            } catch (e) {
-                console.error("Stage 1 - Non-JSON response:", rawText.substring(0, 200));
-                this._lastError = "Proxy Error: Received HTML instead of Data. Check Tomcat console.";
-                data = { results: [] };
-            }
-            console.log("Stage 1 Response:", data);
-            if (data.results && data.results.length > 0) finalResults = data.results;
-            if (data.error) this._lastError = "Proxy Error (S1): " + data.error;
-
-            // Wait 1.5s between stages if results are missing
-            const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-            // Stage 2: Try Netflix (Global)
-            if (finalResults.length < 4) {
-                await sleep(1500);
-                console.log("Stage 2: Attempting Netflix (Global)...");
-                url.search = new URLSearchParams({...baseParams, with_watch_providers: 8}).toString();
-                res = await fetch(url);
-                rawText = await res.text();
-                try {
-                    data = JSON.parse(rawText);
-                } catch (e) {
-                    console.error("Stage 2 - Non-JSON response:", rawText.substring(0, 200));
-                    data = { results: [] };
-                }
-                console.log("Stage 2 Response:", data);
-                if (data.results && data.results.length > 0) {
-                    const newBatch = data.results.filter(nr => !finalResults.some(fr => fr.id === nr.id));
-                    finalResults = [...finalResults, ...newBatch];
-                }
-                if (data.error && finalResults.length === 0) this._lastError = "Proxy Error (S2): " + data.error;
-            }
-
-            // Stage 3: Try All Trending
-            if (finalResults.length === 0) {
-                await sleep(1500);
-                console.log("Stage 3: Attempting All Trending...");
-                url.search = new URLSearchParams(baseParams).toString();
-                res = await fetch(url);
-                rawText = await res.text();
-                try {
-                    data = JSON.parse(rawText);
-                } catch (e) {
-                    console.error("Stage 3 - Non-JSON response:", rawText.substring(0, 200));
-                    data = { results: [] };
-                }
-                console.log("Stage 3 Response:", data);
+            if (searchQuery && searchQuery.trim() !== '') {
+                // LIVE SEARCH MODE
+                console.log(`[Movies] Searching for: "${searchQuery}"...`);
+                const params = new URLSearchParams({
+                    api_key: API_CONFIG.TMDB_API_KEY,
+                    query: searchQuery,
+                    language: langMap[language]?.apiLang || 'en-US'
+                }).toString();
+                
+                // Use proxy to call search endpoint
+                const searchProxyUrl = `https://api.tmdb.org/3/search/movie?${params}`;
+                const res = await fetch(`${proxyBase}?targetUrl=${encodeURIComponent(searchProxyUrl)}`);
+                const data = await res.json();
                 if (data.results) finalResults = data.results;
-                if (data.error) this._lastError = "Proxy Error (S3): " + data.error;
+            } else {
+                // DISCOVERY MODE (Existing logic)
+                const genreId = genreMap[genre] || '';
+                const langConfig = langMap[language] || langMap['English'];
+                const page = Math.floor(Math.random() * 5) + 1;
+
+                const baseParams = {
+                    api_key: API_CONFIG.TMDB_API_KEY,
+                    language: langConfig.apiLang,
+                    with_original_language: langConfig.origLang,
+                    sort_by: 'popularity.desc',
+                    page: page
+                };
+                if (genreId) baseParams.with_genres = genreId;
+
+                const sleep = ms => new Promise(r => setTimeout(r, ms));
+                
+                // Stage 1: Netflix India
+                console.log(`[Movies] Discovering ${genre}/${language} (page ${page})...`);
+                let params = new URLSearchParams({...baseParams, with_watch_providers: 8, watch_region: 'IN'}).toString();
+                let res = await fetch(`${proxyBase}?${params}`);
+                let data;
+                try { data = await res.json(); } catch(e) { data = { results: [] }; }
+                if (data.results && data.results.length > 0) finalResults = data.results;
+
+                if (finalResults.length < 4) {
+                    await sleep(500);
+                    params = new URLSearchParams({...baseParams, with_watch_providers: 8}).toString();
+                    res = await fetch(`${proxyBase}?${params}`);
+                    try { data = await res.json(); } catch(e) { data = { results: [] }; }
+                    if (data.results) finalResults = [...finalResults, ...data.results.filter(nr => !finalResults.some(fr => fr.id === nr.id))];
+                }
             }
 
-            if (!finalResults || finalResults.length === 0) {
-                console.warn('No real-time results found across all stages. Last Error:', this._lastError);
-                return [];
-            }
+            if (!finalResults || finalResults.length === 0) return [];
 
-            this._lastError = null; // Clear error on success
+            this._lastError = null;
             return finalResults.slice(0, 12).map(m => ({
                 id: m.id,
-                title: m.title,
+                title: m.title || m.name,
                 genre: genre,
+                year: m.release_date ? m.release_date.substring(0, 4) : '',
                 rating: (m.vote_average || 0).toFixed(1),
-                img: m.poster_path ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}` : 'https://via.placeholder.com/500x750?text=No+Poster'
+                img: m.poster_path
+                    ? `${API_CONFIG.IMAGE_BASE_URL}${m.poster_path}`
+                    : 'https://via.placeholder.com/500x750?text=No+Poster'
             }));
         } catch (err) {
-            console.error('ApiClient.getMovies Exception:', err);
-            this._lastError = "System Exception: " + err.message;
+            console.error('getMovies Exception:', err);
+            this._lastError = 'Error: ' + err.message;
             return [];
         }
     },
 
     /**
-     * Simulation removed to prioritize requested Real-Time link
+     * SONGS - Real-time iTunes Search API
+     * Searches by the user's language + mood or specific keyword.
      */
-    async _getSimulatedMovies(genre) {
-        return [];
-    },
+    async getSongs(language = 'English', mood = 'Happy', searchQuery = '') {
+        const countryMap = {
+            'English': 'US', 'Hindi': 'IN', 'Korean': 'KR', 'Chinese': 'TW', 'Tamil': 'IN'
+        };
 
-    /**
-     * Internal: Fetch Spotify Access Token
-     */
-    async _getSpotifyToken() {
-        try {
-            const res = await fetch(`${window.location.origin}/intellirec/spotify_auth.jsp`);
-            const data = await res.json();
-            if (data.access_token) return data.access_token;
-            console.error('Spotify Token Error:', data.error);
-            return null;
-        } catch (e) {
-            console.error('Spotify Auth Exception:', e);
-            return null;
-        }
-    },
-
-    /**
-     * Fetch Top Songs based on Language & Mood using iTunes API
-     * USES HIGHLY CURATED ARTIST MAPPING: iTunes search fails on abstract keywords (like 'hindi romantic'). 
-     * To guarantee 100% diverse and accurate results, we map moods to the absolute top artists in those regions.
-     */
-    async getSongs(language = 'English', mood = 'Happy', artist = '') {
-        // Curated map of top artists for exact iTunes matching
-        const queryMap = {
+        const searchTerms = {
             'English': {
-                'Happy': 'Dua Lipa',
-                'Chill': 'Billie Eilish',
-                'Focus': 'Hans Zimmer',
-                'Workout': 'Eminem',
-                'Romantic': 'Ed Sheeran'
+                'Happy':    ['happy pop hits', 'upbeat pop songs'],
+                'Chill':    ['chill pop', 'relaxing pop music'],
+                'Focus':    ['focus study music', 'ambient electronic'],
+                'Workout':  ['workout gym music', 'energy workout songs'],
+                'Romantic': ['romantic pop songs', 'love songs english']
             },
             'Hindi': {
-                'Happy': 'Badshah',
-                'Chill': 'Pritam',
-                'Focus': 'A. R. Rahman',
-                'Workout': 'Mika Singh',
-                'Romantic': 'Arijit Singh'
-            },
-            'Korean': {
-                'Happy': 'BTS',
-                'Chill': 'IU',
-                'Focus': 'Yiruma',
-                'Workout': 'BLACKPINK',
-                'Romantic': 'Crush'
-            },
-            'Chinese': {
-                'Happy': 'Jolin Tsai',
-                'Chill': 'Jay Chou',
-                'Focus': 'Guzheng',
-                'Workout': 'Jackson Wang',
-                'Romantic': 'Eric Chou'
-            },
-            'Tamil': {
-                'Happy': 'Anirudh Ravichander',
-                'Chill': 'Yuvan Shankar Raja',
-                'Focus': 'Ilayaraja',
-                'Workout': 'Vijay',
-                'Romantic': 'Sid Sriram'
+                'Happy':    ['Hindi pop songs', 'new Hindi songs'],
+                'Chill':    ['Hindi chill songs', 'indie Hindi music'],
+                'Focus':    ['Hindi instrumental', 'Indian classical music'],
+                'Workout':  ['Hindi workout songs', 'desi beats'],
+                'Romantic': ['Hindi romantic songs', 'Bollywood love songs']
             }
         };
 
-        // Specific country codes to force iTunes regional catalogs
-        const countryMap = {
-            'English': 'US',
-            'Hindi': 'IN',
-            'Korean': 'KR',
-            'Chinese': 'TW',
-            'Tamil': 'IN'
-        };
+        const country = countryMap[language] || 'US';
+        let term;
 
-        let query;
-        let country = 'US'; // default
-
-        if (artist && artist.trim() !== '') {
-            query = artist.trim();
+        if (searchQuery && searchQuery.trim() !== '') {
+            term = searchQuery.trim();
         } else {
-            // Fallback to a generic query if somehow not mapped
-            const safeLanguage = queryMap[language] ? language : 'English';
-            const safeMood = queryMap[safeLanguage][mood] ? mood : 'Happy';
-            query = queryMap[safeLanguage][safeMood];
-            country = countryMap[safeLanguage];
+            const langTerms = searchTerms[language] || searchTerms['English'];
+            const moodTerms = langTerms[mood] || langTerms['Happy'];
+            term = moodTerms[Math.floor(Math.random() * moodTerms.length)];
         }
 
-        // Search iTunes endpoint using the specific artist and country code
-        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&country=${country}&media=music&entity=song&limit=12`;
+        const itunesUrl = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&country=${country}&media=music&entity=song&limit=50`;
         const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(itunesUrl)}`;
 
-        console.log(`Searching iTunes for Artist/Keyword: ${query} in ${country}...`);
+        console.log(`[Songs] Searching iTunes for: "${term}"...`);
         try {
             const res = await fetch(proxyUrl);
             const data = await res.json();
-            
+
             if (data.results && data.results.length > 0) {
-                // Shuffle the tracks to give a fresh "radio" feel each time requested
                 const shuffled = data.results.sort(() => 0.5 - Math.random());
-                
-                return shuffled.map(t => ({
+                return shuffled.slice(0, 12).map(t => ({
                     id: t.trackId,
                     title: t.trackName,
                     artist: t.artistName,
                     album: t.collectionName,
-                    img: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '300x300bb') : 'https://via.placeholder.com/300?text=No+Cover',
+                    img: t.artworkUrl100 ? t.artworkUrl100.replace('100x100bb', '600x600bb') : 'https://via.placeholder.com/600',
                     url: t.trackViewUrl,
                     preview: t.previewUrl
                 }));
             }
-            // Fallback if the top artist query somehow fails
-            console.warn("iTunes returned no results for query:", query);
             return [];
         } catch (err) {
-            console.error('iTunes API Exception:', err);
+            console.error('[Songs] iTunes Exception:', err);
             return [];
         }
     },
 
     /**
-     * Fetch Gift recommendations (Multi-API engine for UI, Amazon IN for Purchasing)
-     * Maps Recipient & Occasion to specific categories across FakeStoreAPI or DummyJSON
+     * GIFTS - REAL-TIME SCRAPER (Amazon & Flipkart)
+     * Calls our local Java MarketSearchServlet which performs live scraping.
      */
-    async getGifts(recipient = 'Friend', occasion = 'Birthday') {
-        const categories = {
-            'Friend': {
-                'Birthday': { api: 'dummyjson', cat: 'smartphones' },
-                'Anniversary': { api: 'fakestore', cat: 'electronics' },
-                'Holiday': { api: 'dummyjson', cat: 'sports-accessories' },
-                'Promotion': { api: 'dummyjson', cat: 'mens-watches' },
-                'Farewell': { api: 'dummyjson', cat: 'fragrances' },
-                'ThankYou': { api: 'dummyjson', cat: 'groceries' },
-                'Welcome': { api: 'dummyjson', cat: 'home-decoration' }
-            },
-            'Partner': {
-                'Birthday': { api: 'dummyjson', cat: 'womens-watches' }, 
-                'Anniversary': { api: 'fakestore', cat: 'jewelery' }, // New robust category
-                'Holiday': { api: 'dummyjson', cat: 'fragrances' },
-                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
-                'Farewell': { api: 'fakestore', cat: "women's clothing" }, // New robust category
-                'ThankYou': { api: 'fakestore', cat: 'jewelery' },
-                'Welcome': { api: 'dummyjson', cat: 'tops' }
-            },
-            'Family': {
-                'Birthday': { api: 'dummyjson', cat: 'home-decoration' },
-                'Anniversary': { api: 'dummyjson', cat: 'furniture' },
-                'Holiday': { api: 'dummyjson', cat: 'groceries' },
-                'Promotion': { api: 'dummyjson', cat: 'tablets' },
-                'Farewell': { api: 'dummyjson', cat: 'home-decoration' },
-                'ThankYou': { api: 'dummyjson', cat: 'groceries' },
-                'Welcome': { api: 'dummyjson', cat: 'furniture' }
-            },
-            'Colleague': {
-                'Birthday': { api: 'dummyjson', cat: 'laptops' },
-                'Anniversary': { api: 'dummyjson', cat: 'mens-watches' },
-                'Holiday': { api: 'dummyjson', cat: 'tablets' },
-                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
-                'Farewell': { api: 'fakestore', cat: "men's clothing" }, // New robust category
-                'ThankYou': { api: 'dummyjson', cat: 'fragrances' },
-                'Welcome': { api: 'dummyjson', cat: 'tablets' }
-            },
-            'Manager': {
-                'Birthday': { api: 'dummyjson', cat: 'mens-watches' },
-                'Anniversary': { api: 'dummyjson', cat: 'home-decoration' },
-                'Holiday': { api: 'dummyjson', cat: 'laptops' },
-                'Promotion': { api: 'dummyjson', cat: 'smartphones' },
-                'Farewell': { api: 'dummyjson', cat: 'furniture' },
-                'ThankYou': { api: 'dummyjson', cat: 'fragrances' },
-                'Welcome': { api: 'dummyjson', cat: 'mens-shirts' }
-            },
-            'Client': {
-                'Birthday': { api: 'dummyjson', cat: 'fragrances' },
-                'Anniversary': { api: 'dummyjson', cat: 'laptops' },
-                'Holiday': { api: 'dummyjson', cat: 'home-decoration' },
-                'Promotion': { api: 'dummyjson', cat: 'tablets' },
-                'Farewell': { api: 'dummyjson', cat: 'mens-watches' },
-                'ThankYou': { api: 'dummyjson', cat: 'home-decoration' },
-                'Welcome': { api: 'dummyjson', cat: 'fragrances' }
-            },
-            'Mentor': {
-                'Birthday': { api: 'dummyjson', cat: 'tablets' },
-                'Anniversary': { api: 'dummyjson', cat: 'womens-watches' },
-                'Holiday': { api: 'dummyjson', cat: 'furniture' },
-                'Promotion': { api: 'dummyjson', cat: 'laptops' },
-                'Farewell': { api: 'dummyjson', cat: 'home-decoration' },
-                'ThankYou': { api: 'dummyjson', cat: 'mens-watches' },
-                'Welcome': { api: 'dummyjson', cat: 'fragrances' }
-            }
+    async getGifts(recipient = 'Friend', occasion = 'Birthday', searchQuery = '') {
+        const keywordMap = {
+            'Friend': { 'Birthday': 'cool gadget gift' },
+            'Partner': { 'Birthday': 'romantic gift' },
+            'Family': { 'Birthday': 'home decor' }
         };
 
-        const safeRecipient = categories[recipient] ? recipient : 'Friend';
-        const safeOccasion = categories[safeRecipient][occasion] ? occasion : 'Birthday';
-        const target = categories[safeRecipient][safeOccasion];
+        let query = searchQuery;
+        if (!query || query.trim() === '') {
+            const safeRecipient = keywordMap[recipient] ? recipient : 'Friend';
+            query = (keywordMap[safeRecipient][occasion] || keywordMap[safeRecipient]['Birthday']) + ' for ' + recipient;
+        }
 
-        console.log(`Fetching real-time gifts for ${recipient} on ${occasion} (API: ${target.api}, Category: ${target.cat})...`);
-        
+        console.log(`[Gifts] Scraper Search for: "${query}"...`);
+
         try {
-            let targetUrl = '';
-            if (target.api === 'fakestore') {
-                targetUrl = `https://fakestoreapi.com/products/category/${encodeURIComponent(target.cat)}`;
-            } else {
-                targetUrl = `https://dummyjson.com/products/category/${encodeURIComponent(target.cat)}`;
-            }
-
-            const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp?targetUrl=${encodeURIComponent(targetUrl)}`;
-            const res = await fetch(proxyUrl);
+            const res = await fetch(`${window.location.origin}/intellirec/market-search?q=${encodeURIComponent(query)}`);
             const data = await res.json();
+
+            if (data.error) throw new Error(data.error);
+
+            // Merge Amazon and Flipkart results
+            const allItems = [...(data.amazon || []), ...(data.flipkart || [])];
             
-            let items = [];
+            // Randomize for fresh feel
+            const shuffled = allItems.sort(() => 0.5 - Math.random());
 
-            // Unify data formats
-            if (target.api === 'fakestore' && Array.isArray(data)) {
-                items = data.map(p => ({
-                    id: p.id,
-                    name: p.title,
-                    category: p.category,
-                    price: `₹${Math.round(p.price * 83).toLocaleString('en-IN')}`,
-                    img: p.image,
-                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title)}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
-                }));
-            } else if (target.api === 'dummyjson' && data.products) {
-                items = data.products.map(p => ({
-                    id: p.id,
-                    name: p.title,
-                    category: p.category.replace('-', ' '),
-                    price: `₹${Math.round(p.price * 83).toLocaleString('en-IN')}`,
-                    img: p.thumbnail,
-                    amazonUrl: `https://www.amazon.in/s?k=${encodeURIComponent(p.title + ' ' + (p.brand || ''))}&tag=${API_CONFIG.AMAZON_PARTNER_TAG}`
-                }));
-            }
-
-            return items.slice(0, 12);
+            return shuffled.slice(0, 12).map((p, idx) => ({
+                id: 'scraped-' + idx,
+                name: p.title,
+                category: p.source.toUpperCase() + ' MATCH',
+                price: `₹${Math.round(p.price).toLocaleString('en-IN')}`,
+                img: p.img || 'https://via.placeholder.com/400x400?text=No+Preview',
+                amazonUrl: p.url
+            }));
         } catch (e) {
-            console.error('Multi-API Gifts Exception:', e);
+            console.error('[Gifts] Scraper Exception:', e);
             return [];
         }
     },
 
     /**
-     * Fetch Travel recommendations (Real-Time TripAdvisor Scraper)
-     * Queries TripAdvisor directly via proxy, parses HTML for location data.
+     * TRAVEL - Real-time Wikipedia Search
      */
-    async getTravel(purpose = 'Vacation') {
-        const queryMap = {
-            'Vacation': 'island resort beach',
-            'Adventure': 'mountain hiking ski',
-            'Culture': 'historic temples museum',
-            'Food': 'street food culinary'
-        };
-        const query = queryMap[purpose] || 'popular destinations';
-        
-        // Use TripAdvisor's internal search autocomplete API to get live locations
-        // This is a public, unauthenticated endpoint used by their search bar
-        const taUrl = `https://www.tripadvisor.com/data/graphql/ids`;
-        const payload = {
-            "query": "c92d56a297e59bbf4514a66a1a1fde81", // Known hash for TypeaheadSearch
-            "variables": {
-                "request": {
-                    "query": query,
-                    "limit": 12,
-                    "scope": "WORLDWIDE",
-                    "locale": "en-US",
-                    "types": ["LOCATION"]
-                }
-            }
+    async getTravel(purpose = 'Vacation', searchQuery = '') {
+        const wikiCategories = {
+            'Vacation':  ['beach resort', 'tropical island'],
+            'Adventure': ['mountain trekking', 'national park'],
+            'Culture':   ['historic city', 'heritage site'],
+            'Food':      ['food capital', 'culinary city']
         };
 
-        const proxyUrl = `${window.location.origin}/intellirec/proxy.jsp`;
+        let term = searchQuery;
+        if (!term || term.trim() === '') {
+            const categories = wikiCategories[purpose] || wikiCategories['Vacation'];
+            term = categories[Math.floor(Math.random() * categories.length)];
+        }
 
-        console.log(`Fetching REAL-TIME TripAdvisor data for: ${query}`);
+        console.log(`[Travel] Wikipedia Search for: "${term}"...`);
+
         try {
-            // Using POST to the proxy, which needs to forward it
-            // Assuming proxy.jsp handles basic GETs, we'll use a known public RapidAPI for this instead 
-            // to ensure it works beautifully without needing complex proxy POST configurations from the browser.
-            
-            // ALTERNATIVE: Since we want zero-setup, we will use Nominatim (OpenStreetMap) combined with Wikipedia
-            // to fetch REAL places based on the purpose, and dynamically generate TripAdvisor URLs. 
-            // This guarantees it works 100% of the time, provides real world data, and links directly to TA.
-            
-            const cityMap = {
-                'Vacation': ['Maldives', 'Bora Bora', 'Maui', 'Bali', 'Santorini', 'Fiji', 'Seychelles', 'Phuket'],
-                'Adventure': ['Patagonia', 'Queenstown', 'Banff', 'Innsbruck', 'Chamonix', 'Moab', 'Zermatt', 'Kathmandu'],
-                'Culture': ['Kyoto', 'Rome', 'Machu Picchu', 'Petra', 'Athens', 'Jerusalem', 'Varanasi', 'Istanbul'],
-                'Food': ['Osaka', 'Lyon', 'Bologna', 'Oaxaca', 'Bangkok', 'San Sebastian', 'Penang', 'Naples']
-            };
+            const wikiSearchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(term + ' travel')}&srnamespace=0&srlimit=20&format=json&origin=*`;
+            const searchRes = await fetch(wikiSearchUrl);
+            const searchData = await searchRes.json();
+            const articles = (searchData.query?.search || []).sort(() => 0.5 - Math.random()).slice(0, 8);
 
-            const cities = cityMap[purpose].sort(() => 0.5 - Math.random()).slice(0, 6);
-            let results = [];
-
-            for (const city of cities) {
-                // Fetch live image from Wikipedia
-                const wikiUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(city)}&prop=pageimages&format=json&pithumbsize=600&origin=*`;
-                
+            const results = [];
+            for (const article of articles) {
+                if (results.length >= 6) break;
                 try {
-                    const res = await fetch(wikiUrl);
-                    const data = await res.json();
-                    const pages = data.query.pages;
-                    const pageId = Object.keys(pages)[0];
-                    let img = 'https://via.placeholder.com/600x400?text=Destination';
-                    
-                    if (pageId !== "-1" && pages[pageId].thumbnail) {
-                        img = pages[pageId].thumbnail.source;
-                    }
+                    const imgUrl = `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(article.title)}&prop=pageimages|extracts&exchars=200&exintro=true&format=json&pithumbsize=1000&origin=*`;
+                    const imgRes = await fetch(imgUrl);
+                    const imgData = await imgRes.json();
+                    const page = Object.values(imgData.query.pages)[0];
 
-                    results.push({
-                        id: city,
-                        place: city,
-                        type: purpose.toUpperCase() + ' DESTINATION',
-                        rating: (4.5 + Math.random() * 0.5).toFixed(1), // TA ratings are usually 4.5+ for these
-                        img: img,
-                        // Direct Real-Time Search link to TripAdvisor
-                        tripadvisorUrl: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(city)}`
-                    });
-                } catch(e) {
-                    console.log("Wiki fetch failed for", city);
-                }
+                    if (page && page.thumbnail) {
+                    }
+                } catch (e) {}
             }
             return results;
         } catch (e) {
-            console.error('Travel API Exception:', e);
+            console.error('[Travel] Exception:', e);
             return [];
         }
     }

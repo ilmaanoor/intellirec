@@ -144,6 +144,10 @@
     </div>
 
     <div class="filter-section">
+        <div class="filter-group" style="flex: 2;">
+            <label>Search Movie</label>
+            <input type="text" id="movie-search" class="form-control" placeholder="e.g. Inception, Shah Rukh Khan..." style="width: 100%;">
+        </div>
         <div class="filter-group">
             <label>Genre</label>
             <select id="genre-filter" class="form-control">
@@ -153,6 +157,7 @@
                 <option value="Comedy">Comedy</option>
                 <option value="Drama">Drama</option>
                 <option value="Fantasy">Fantasy</option>
+                <option value="Romance">Romance</option>
             </select>
         </div>
         <div class="filter-group">
@@ -179,7 +184,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=14.0"></script>
+    <script src="js/api.js?v=16.0"></script>
     <script>
         // User Sync
         firebase.auth().onAuthStateChanged((user) => {
@@ -193,16 +198,17 @@
             const grid = document.getElementById('movie-grid');
             const genre = document.getElementById('genre-filter').value;
             const lang = document.getElementById('lang-filter').value;
+            const query = document.getElementById('movie-search').value;
 
             grid.innerHTML = '<div class="loading-state">Curating your list...</div>';
 
             try {
-                const movies = await ApiClient.getMovies(genre, lang);
+                const movies = await ApiClient.getMovies(genre, lang, query);
                 grid.innerHTML = '';
                 
                 if (!movies || movies.length === 0) {
-                    const errorMsg = ApiClient._lastError || 'No matching movies found on Netflix right now.';
-                    grid.innerHTML = `<div class="loading-state">\${errorMsg}<br><small style="opacity: 0.6; font-size: 10px;">Try switching to "English" or changing the Genre to find more results.</small></div>`;
+                    const errorMsg = ApiClient._lastError || 'No matching movies found right now.';
+                    grid.innerHTML = `<div class="loading-state">\${errorMsg}<br><small style="opacity: 0.6; font-size: 10px;">Try a different keyword or check your internet.</small></div>`;
                     return;
                 }
 
@@ -215,7 +221,7 @@
                     card.innerHTML = `
                         <img src="\${movie.img}" alt="\${movie.title}" class="movie-thumb" onerror="this.src='https://via.placeholder.com/400x600?text=No+Image'">
                         <div class="movie-meta">
-                            <span class="movie-tag">Netflix Choice \${sourceBadge}</span>
+                            <span class="movie-tag">Live Feed \${sourceBadge}</span>
                             <h3 class="movie-title">\${movie.title}</h3>
                             <div class="movie-footer">
                                 <span>\${movie.genre}</span>
@@ -229,12 +235,15 @@
                     grid.appendChild(card);
                 });
             } catch (err) {
-                grid.innerHTML = '<div class="loading-state">Unable to load recommendations. Please check your internet connection or browser console (F12).</div>';
+                grid.innerHTML = '<div class="loading-state">Unable to load recommendations. Please check your internet connection.</div>';
             }
         }
 
         document.getElementById('genre-filter').addEventListener('change', loadMovies);
         document.getElementById('lang-filter').addEventListener('change', loadMovies);
+        document.getElementById('movie-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadMovies();
+        });
         
         loadMovies();
     </script>

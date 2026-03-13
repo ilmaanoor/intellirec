@@ -137,9 +137,13 @@
         <p>Your personalized passport to the world's most incredible places.</p>
     </div>
 
-    <div class="filter-section">
-        <div class="filter-group">
-            <label>Whats your Travel Purpose?</label>
+    <div class="filter-section" style="max-width: 800px; display: flex; gap: 20px; align-items: flex-end;">
+        <div class="filter-group" style="flex: 2;">
+            <label>Universal Search</label>
+            <input type="text" id="travel-search" class="form-control" placeholder="e.g. Paris, Swiss Alps, Taj Mahal..." style="width: 100%;">
+        </div>
+        <div class="filter-group" style="flex: 1;">
+            <label>Travel Purpose?</label>
             <select id="purpose-filter" class="form-control">
                 <option value="Vacation">Relaxing Vacation</option>
                 <option value="Adventure">Adventure & Sports</option>
@@ -161,7 +165,7 @@
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js"></script>
+    <script src="js/api.js?v=16.0"></script>
     <script>
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -173,13 +177,19 @@
         async function loadTravel() {
             const grid = document.getElementById('travel-grid');
             const purpose = document.getElementById('purpose-filter').value;
+            const query = document.getElementById('travel-search').value;
 
             grid.innerHTML = '<div class="loading-state">Consulting local experts...</div>';
 
             try {
-                const destinations = await ApiClient.getTravel(purpose);
+                const destinations = await ApiClient.getTravel(purpose, query);
                 grid.innerHTML = '';
                 
+                if (!destinations || destinations.length === 0) {
+                    grid.innerHTML = '<div class="loading-state">No matching destinations found. Try another search term.</div>';
+                    return;
+                }
+
                 destinations.forEach(dest => {
                     const card = document.createElement('div');
                     card.className = 'travel-card';
@@ -192,7 +202,7 @@
                             <span class="place-type">\${dest.type}</span>
                             <h3 class="place-name">\${dest.place}</h3>
                             <p style="font-size:14px; color:var(--text-muted); line-height:1.5; margin-bottom:15px;">
-                                Experience the best of \${dest.place}, curated for \${purpose.toLowerCase()} lovers.
+                                \${dest.description}
                             </p>
                             <div class="travel-footer">
                                 <div class="rating-dots">●●●●●</div>
@@ -208,6 +218,9 @@
         }
 
         document.getElementById('purpose-filter').addEventListener('change', loadTravel);
+        document.getElementById('travel-search').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') loadTravel();
+        });
         loadTravel();
     </script>
 </body>
