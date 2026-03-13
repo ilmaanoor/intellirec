@@ -19,34 +19,55 @@ public class TravelSearchServlet extends HttpServlet {
 
     private final TravelScraperEngine scraperEngine = new TravelScraperEngine();
 
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String query = request.getParameter("query");
-        String purpose = request.getParameter("purpose");
-
-        // Construct search term based on purpose if query is empty
-        if (query == null || query.trim().isEmpty()) {
-            query = (purpose != null) ? purpose : "Travel Destinations";
+    // Maps "purpose" dropdown value → smart Wikipedia search term
+    private static String purposeToQuery(String purpose) {
+        if (purpose == null) return "famous travel destinations";
+        switch (purpose.trim()) {
+            case "Adventure":  return "adventure travel destinations";
+            case "Culture":    return "world heritage sites";
+            case "Food":       return "culinary tourism destinations";
+            case "Vacation":
+            default:           return "popular travel destinations";
         }
+    }
 
-        System.out.println("[TravelServlet] Searching for: " + query);
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-        List<TravelDestination> destinations = scraperEngine.searchTripAdvisor(query);
-
+        // Allow CORS for local dev
+        response.setHeader("Access-Control-Allow-Origin", "*");
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
+
+        String query   = request.getParameter("query");
+        String purpose = request.getParameter("purpose");
+
+        // Build effective search term
+        String effectiveQuery;
+        if (query != null && !query.trim().isEmpty() && !query.trim().equalsIgnoreCase(purpose)) {
+            // User typed something specific — use it directly
+            effectiveQuery = query.trim();
+        } else {
+            // Only a purpose filter was provided — build a smart query from it
+            effectiveQuery = purposeToQuery(purpose);
+        }
+
+        System.out.println("[TravelServlet] PURPOSE=" + purpose + " | EFFECTIVE QUERY=" + effectiveQuery);
+
+        List<TravelDestination> destinations = scraperEngine.search(effectiveQuery, purpose != null ? purpose : "Vacation");
 
         PrintWriter out = response.getWriter();
         JSONArray jsonArray = new JSONArray();
 
         for (TravelDestination dest : destinations) {
             JSONObject json = new JSONObject();
-            json.put("id", dest.getId());
-            json.put("place", dest.getName());
-            json.put("description", dest.getDescription());
-            json.put("type", dest.getType());
-            json.put("rating", dest.getRating());
-            json.put("img", dest.getImg());
+            json.put("id",            dest.getId());
+            json.put("place",         dest.getName());
+            json.put("description",   dest.getDescription());
+            json.put("type",          dest.getType());
+            json.put("rating",        dest.getRating());
+            json.put("img",           dest.getImg());
             json.put("tripadvisorUrl", dest.getTripadvisorUrl());
             jsonArray.put(json);
         }

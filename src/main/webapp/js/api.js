@@ -227,28 +227,37 @@ const ApiClient = {
     },
 
     /**
-     * TRAVEL - Real-time Wikipedia Search with Safety Filters
+     * TRAVEL - Real-time Wikipedia-Powered Destination Search
+     * Maps purpose to smart default queries for better Wikipedia results.
      */
     async getTravel(purpose = 'Vacation', searchQuery = '') {
+        // Purpose → descriptive search term for Wikipedia
+        const purposeQueryMap = {
+            'Vacation':   'tropical beach paradise island resort',
+            'Adventure':  'mountain trekking national park adventure sport',
+            'Culture':    'UNESCO world heritage ancient temple historical site',
+            'Food':       'famous culinary city food market street food cuisine'
+        };
+
         let term = searchQuery;
         if (!term || term.trim() === '') {
-            term = purpose;
+            term = purposeQueryMap[purpose] || 'world famous travel destinations';
         }
 
-        console.log(`[Travel] TripAdvisor Scraper Request for: "${term}"...`);
+        console.log(`[Travel] Wikipedia Scraper Request — purpose="${purpose}" query="${term}"`);
 
         try {
-            // Updated to call local travel-search servlet powered by TripAdvisor scraper
-            const url = `/intellirec/travel-search?query=${encodeURIComponent(term)}&purpose=${encodeURIComponent(purpose)}`;
+            const url = `${window.location.origin}/intellirec/travel-search?query=${encodeURIComponent(term)}&purpose=${encodeURIComponent(purpose)}`;
             const response = await fetch(url);
-            if (!response.ok) throw new Error('Search failed');
+            if (!response.ok) throw new Error('Travel search failed: HTTP ' + response.status);
             
             const results = await response.json();
+            console.log(`[Travel] Got ${results.length} destinations.`);
             
-            // Apply client-side safety filter just in case
+            // Apply client-side safety filter
             return results.filter(dest => this._isSafeTravelContent(dest.place) && this._isSafeTravelContent(dest.description));
         } catch (e) {
-            console.error('[Travel] Scraper Exception:', e);
+            console.error('[Travel] Exception:', e);
             return [];
         }
     }

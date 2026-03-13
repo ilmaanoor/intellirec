@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="css/global.css">
     <style>
         .page-header { padding: 120px 20px 40px; text-align: center; }
-        
+
         .filter-section {
             max-width: 600px;
             margin: 0 auto 50px;
@@ -35,6 +35,7 @@
             transition: var(--transition-smooth);
             border: 1px solid rgba(0,0,0,0.03);
             position: relative;
+            min-height: 480px; /* Ensure cards have height */
         }
 
         .travel-card:hover {
@@ -47,6 +48,7 @@
             width: 100%;
             height: 240px;
             object-fit: cover;
+            background: #f0f0f0;
         }
 
         .tripadvisor-tag {
@@ -60,11 +62,10 @@
             padding: 4px 12px;
             border-radius: 50px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
         }
 
-        .travel-meta {
-            padding: 24px;
-        }
+        .travel-meta { padding: 24px; }
 
         .place-type {
             font-size: 11px;
@@ -104,12 +105,58 @@
             font-size: 14px;
         }
 
+        /* Loading */
         .loading-state {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 100px 20px;
+            padding: 80px 20px;
             color: var(--text-muted);
             font-weight: 600;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 48px;
+            height: 48px;
+            border: 4px solid rgba(0, 166, 153, 0.15);
+            border-top-color: #00A699;
+            border-radius: 50%;
+            animation: spin 0.9s linear infinite;
+            margin-bottom: 18px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Result count badge */
+        .result-count {
+            text-align: center;
+            margin: -30px auto 30px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #00A699;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Search button */
+        .search-btn {
+            background: linear-gradient(135deg, #00A699, #00BFB3);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 166, 153, 0.35);
         }
     </style>
 </head>
@@ -137,90 +184,147 @@
         <p>Your personalized passport to the world's most incredible places.</p>
     </div>
 
-    <div class="filter-section" style="max-width: 800px; display: flex; gap: 20px; align-items: flex-end;">
-        <div class="filter-group" style="flex: 2;">
-            <label>Universal Search</label>
-            <input type="text" id="travel-search" class="form-control" placeholder="e.g. Paris, Swiss Alps, Taj Mahal..." style="width: 100%;">
+    <!-- Filter & Search Bar -->
+    <div class="filter-section" style="max-width: 860px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="filter-group" style="flex: 2; min-width: 200px;">
+            <label>Search Destination</label>
+            <input type="text" id="travel-search" class="form-control"
+                   placeholder="e.g. Paris, Bali, Swiss Alps, Taj Mahal..." style="width: 100%;">
         </div>
-        <div class="filter-group" style="flex: 1;">
-            <label>Travel Purpose?</label>
+        <div class="filter-group" style="flex: 1; min-width: 150px;">
+            <label>Travel Purpose</label>
             <select id="purpose-filter" class="form-control">
-                <option value="Vacation">Relaxing Vacation</option>
-                <option value="Adventure">Adventure & Sports</option>
-                <option value="Culture">Cultural Discovery</option>
-                <option value="Food">Food & Nightlife</option>
+                <option value="Vacation">&#127958; Relaxing Vacation</option>
+                <option value="Adventure">&#127956; Adventure &amp; Sports</option>
+                <option value="Culture">&#127981; Cultural Discovery</option>
+                <option value="Food">&#127860; Food &amp; Nightlife</option>
             </select>
+        </div>
+        <div class="filter-group">
+            <label style="visibility:hidden;">Go</label>
+            <button class="search-btn" onclick="loadTravel()">&#128269; Search</button>
         </div>
     </div>
 
+    <!-- Result count badge -->
+    <div id="result-count" class="result-count" style="display:none;"></div>
+
+    <!-- Results Grid -->
     <div id="travel-grid" class="travel-grid">
-        <div class="loading-state">Consulting global experts...</div>
+        <div class="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Consulting global experts...</p>
+        </div>
     </div>
 
     <footer class="footer-site">
-        Powered by IntelliRec AI • Connected to TripAdvisor
+        Powered by IntelliRec AI &bull; Real-Time Data via Wikipedia &amp; TripAdvisor
     </footer>
 
     <script src="js/firebase-app-compat.js"></script>
     <script src="js/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/api.js?v=18.0"></script>
+    <script src="js/api.js?v=21.0"></script>
     <script>
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 const name = user.displayName || user.email.split('@')[0];
-                document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=\${name}`;
+                document.getElementById('user-avatar').src =
+                    'https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=' + encodeURIComponent(name);
             }
         });
 
-        async function loadTravel() {
-            const grid = document.getElementById('travel-grid');
-            const purpose = document.getElementById('purpose-filter').value;
-            const query = document.getElementById('travel-search').value;
+        // Rotating status messages shown during Wikipedia load
+        var loadingMessages = [
+            '&#127758; Connecting to Wikipedia travel database...',
+            '&#128269; Scanning global destinations...',
+            '&#128240; Fetching real descriptions and images...',
+            '&#9989; Curating your personalized results...'
+        ];
 
-            grid.innerHTML = '<div class="loading-state">Consulting local experts...</div>';
+        function showLoadingAnimation() {
+            var grid = document.getElementById('travel-grid');
+            var countEl = document.getElementById('result-count');
+            if (countEl) countEl.style.display = 'none';
+            var msgIndex = 0;
+            grid.innerHTML = '<div class="loading-state" id="loading-msg">' +
+                '<div class="loading-spinner"></div>' +
+                '<p>' + loadingMessages[0] + '</p></div>';
+            
+            return setInterval(function() {
+                msgIndex = (msgIndex + 1) % loadingMessages.length;
+                var el = document.getElementById('loading-msg');
+                if (el) el.querySelector('p').innerHTML = loadingMessages[msgIndex];
+            }, 1200);
+        }
+
+        async function loadTravel() {
+            var grid    = document.getElementById('travel-grid');
+            var purpose = document.getElementById('purpose-filter').value;
+            var query   = document.getElementById('travel-search').value;
+            var countEl = document.getElementById('result-count');
+            var intervalId = showLoadingAnimation();
 
             try {
-                const destinations = await ApiClient.getTravel(purpose, query);
+                var destinations = await ApiClient.getTravel(purpose, query);
+                clearInterval(intervalId);
                 grid.innerHTML = '';
-                
+
                 if (!destinations || destinations.length === 0) {
-                    grid.innerHTML = '<div class="loading-state">No matching destinations found. Try another search term.</div>';
+                    if (countEl) countEl.style.display = 'none';
+                    grid.innerHTML = '<div class="loading-state">&#128533; No destinations found. Try a different search term.</div>';
                     return;
                 }
 
-                destinations.forEach(dest => {
-                    const card = document.createElement('div');
+                // Show count badge
+                if (countEl) {
+                    countEl.textContent = '\u2713 Found ' + destinations.length + ' destination' + (destinations.length !== 1 ? 's' : '');
+                    countEl.style.display = 'block';
+                }
+
+                destinations.forEach(function(dest) {
+                    var card = document.createElement('div');
                     card.className = 'travel-card';
-                    const sourceBadge = '<span style="color: #00A699; font-size: 10px; font-weight: bold;">[REAL TIME]</span>';
+
+                    var ratingNumeric = parseFloat(dest.rating) || 4;
+                    var stars = '\u2605'.repeat(Math.min(5, Math.round(ratingNumeric)));
+
+                    // Use Unsplash as fallback image
+                    var imgSrc = (dest.img && dest.img.length > 15)
+                        ? dest.img
+                        : 'https://source.unsplash.com/800x600/?' + encodeURIComponent(dest.place) + ',travel';
+
+                    var cardHtml = '<div class="tripadvisor-tag">WIKIPEDIA <span style="color:#00A699;font-size:10px;font-weight:bold;">[LIVE]</span></div>' +
+                        '<img src="' + imgSrc + '" alt="' + dest.place + '" class="travel-thumb" ' +
+                        'onerror="this.src=\'https://source.unsplash.com/800x600/?travel,world,destination\'">' +
+                        '<div class="travel-meta">' +
+                        '<span class="place-type">' + dest.type + '</span>' +
+                        '<h3 class="place-name">' + dest.place + '</h3>' +
+                        '<p style="font-size:14px;color:var(--text-muted);line-height:1.6;margin-bottom:15px;">' + dest.description + '</p>' +
+                        '<div class="travel-footer">' +
+                        '<div class="rating-dots">' + stars + ' <span style="font-size:12px;color:#888;margin-left:4px;">' + dest.rating + '</span></div>' +
+                        '<a href="' + dest.tripadvisorUrl + '" target="_blank" class="explore-link">Explore on TripAdvisor &#8599;</a>' +
+                        '</div></div>';
                     
-                    card.innerHTML = `
-                        <div class="tripadvisor-tag">TRIPADVISOR \${sourceBadge}</div>
-                        <img src="\${dest.img}" alt="\${dest.place}" class="travel-thumb">
-                        <div class="travel-meta">
-                            <span class="place-type">\${dest.type}</span>
-                            <h3 class="place-name">\${dest.place}</h3>
-                            <p style="font-size:14px; color:var(--text-muted); line-height:1.5; margin-bottom:15px;">
-                                \${dest.description}
-                            </p>
-                            <div class="travel-footer">
-                                <div class="rating-dots">●●●●●</div>
-                                <a href="\${dest.tripadvisorUrl}" target="_blank" class="explore-link">Explore Details</a>
-                            </div>
-                        </div>
-                    `;
+                    card.innerHTML = cardHtml;
                     grid.appendChild(card);
                 });
+
             } catch (err) {
-                grid.innerHTML = '<div class="loading-state">Failed to map destinations. Please refresh.</div>';
+                clearInterval(intervalId);
+                if (countEl) countEl.style.display = 'none';
+                grid.innerHTML = '<div class="loading-state">&#10060; Failed to load destinations. Please refresh.</div>';
+                console.error('[Travel] loadTravel error:', err);
             }
         }
 
         document.getElementById('purpose-filter').addEventListener('change', loadTravel);
-        document.getElementById('travel-search').addEventListener('keypress', (e) => {
+        document.getElementById('travel-search').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') loadTravel();
         });
+
+        // Auto-load on page open
         loadTravel();
     </script>
 </body>
