@@ -6,6 +6,7 @@
     <title>Categories - IntelliRec AI</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body>
     <nav class="navbar-global">
@@ -25,36 +26,46 @@
         </div>
     </nav>
 
+    <div class="hero-bg-accent" style="position: fixed; top: -10%; right: -10%; width: 50%; height: 50%; background: radial-gradient(circle, rgba(249, 168, 37, 0.08) 0%, transparent 70%); z-index: -1;"></div>
+
     <div class="page-header">
-        <h1>What are you looking for today?</h1>
-        <p>Select a category to get started with our real-time discovery engine.</p>
+        <h1>Discovery Center</h1>
+        <p>Expertly curated recommendations tailored to your unique taste. Where will your curiosity take you today?</p>
     </div>
 
-    <div class="hero-grid-global" style="margin-top: 40px;">
+    <div class="hero-grid-global">
         <a href="movies.jsp" class="hero-card">
-            <div class="hero-card-icon">🎬</div>
+            <div class="hero-card-icon">
+                <i class="fa-solid fa-film"></i>
+            </div>
             <h3>Movies</h3>
-            <p>Blockbusters & hidden gems curated for you.</p>
+            <p>From mainstream blockbusters to artistic hidden gems across all genres.</p>
         </a>
         <a href="songs.jsp" class="hero-card">
-            <div class="hero-card-icon">🎵</div>
+            <div class="hero-card-icon">
+                <i class="fa-solid fa-music"></i>
+            </div>
             <h3>Songs</h3>
-            <p>The perfect soundtrack for your mood.</p>
+            <p>Personalized soundtracks and trending tracks for every mood and occasion.</p>
         </a>
         <a href="gifts.jsp" class="hero-card">
-            <div class="hero-card-icon">🎁</div>
+            <div class="hero-card-icon">
+                <i class="fa-solid fa-gift"></i>
+            </div>
             <h3>Gifts</h3>
-            <p>Real-time scraper picks from top stores.</p>
+            <p>Unique gift ideas intelligently scraped from the world's top marketplaces.</p>
         </a>
         <a href="travel.jsp" class="hero-card">
-            <div class="hero-card-icon">✈️</div>
+            <div class="hero-card-icon">
+                <i class="fa-solid fa-plane-departure"></i>
+            </div>
             <h3>Travel</h3>
-            <p>Discover your next dream destination.</p>
+            <p>Real-time flight and destination picks powered by global travel intelligence.</p>
         </a>
     </div>
 
-    <footer class="footer-site" style="margin-top: 80px;">
-        Powered by IntelliRec AI • Connected via Real-Time API
+    <footer class="footer-site">
+        Powered by IntelliRec AI • Connected via Real-Time API Engine
     </footer>
 
     <script src="js/firebase-app-compat.js"></script>
