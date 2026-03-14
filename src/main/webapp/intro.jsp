@@ -215,12 +215,15 @@
             if (!user) {
                 window.location.href = 'login.jsp';
             } else {
+                const name = user.displayName || user.email.split('@')[0];
                 document.getElementById('user-avatar').src = "https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=" + name;
                 console.log("Welcome,", name);
 
                 // Show Admin Link if eligible
                 if (user.email.includes('admin') || user.email === 'admin@intellirec.com') {
-                    document.getElementById('admin-nav-item').style.display = 'block';
+                    if (document.getElementById('admin-nav-item')) {
+                        document.getElementById('admin-nav-item').style.display = 'block';
+                    }
                 }
             }
         });

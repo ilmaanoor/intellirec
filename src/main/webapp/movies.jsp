@@ -129,6 +129,7 @@
             <li><a href="songs.jsp">Songs</a></li>
             <li><a href="gifts.jsp">Gifts</a></li>
             <li><a href="travel.jsp">Travel</a></li>
+            <li id="admin-nav-item" style="display: none;"><a href="admin.jsp" style="color: var(--accent);">Admin</a></li>
         </ul>
         <div class="nav-user">
             <img id="user-avatar" src="https://ui-avatars.com/api/?background=F9A825&color=white&name=User" alt="Avatar">
@@ -191,6 +192,13 @@
             if (user) {
                 const name = user.displayName || user.email.split('@')[0];
                 document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=\${name}`;
+
+                // Show Admin Link if eligible
+                if (user.email.includes('admin') || user.email === 'admin@intellirec.com') {
+                    if (document.getElementById('admin-nav-item')) {
+                        document.getElementById('admin-nav-item').style.display = 'block';
+                    }
+                }
             }
         });
 
