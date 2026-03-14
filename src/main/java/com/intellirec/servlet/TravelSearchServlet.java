@@ -21,11 +21,25 @@ public class TravelSearchServlet extends HttpServlet {
 
     private static final java.util.Map<String, String[]> PURPOSE_CITY_MAP = new java.util.HashMap<>();
     static {
-        PURPOSE_CITY_MAP.put("Relaxing Vacation", new String[]{"Maldives", "Bora Bora", "Seychelles", "Fiji", "Mykonos", "Maui"});
-        PURPOSE_CITY_MAP.put("Adventure & Sports", new String[]{"Queenstown", "Chamonix", "Banff", "Patagonia", "Zermatt", "Moab"});
-        PURPOSE_CITY_MAP.put("Cultural Discovery", new String[]{"Rome", "Kyoto", "Athens", "Cairo", "Petra", "Istanbul"});
-        PURPOSE_CITY_MAP.put("Food & Nightlife", new String[]{"Tokyo", "Bangkok", "Osaka", "New Orleans", "Barcelona", "Mumbai"});
+        PURPOSE_CITY_MAP.put("Relaxing Vacation", new String[]{
+            "Maldives", "Bora Bora", "Seychelles", "Fiji", "Mykonos", "Maui", "Bali", "Phuket", "Santorini", "Amalfi", 
+            "Cancun", "Mauritius", "Langkawi", "Bahamas", "Ibiza", "Kauai", "Palawan"
+        });
+        PURPOSE_CITY_MAP.put("Adventure & Sports", new String[]{
+            "Queenstown", "Chamonix", "Banff", "Patagonia", "Zermatt", "Moab", "Interlaken", "Reykjavik", "Pokhara", 
+            "Whistler", "Aspen", "Cape Town", "Nairobi", "Livingstone", "Machu Picchu"
+        });
+        PURPOSE_CITY_MAP.put("Cultural Discovery", new String[]{
+            "Rome", "Kyoto", "Athens", "Cairo", "Petra", "Istanbul", "Prague", "Florence", "Cusco", "Varanasi", 
+            "Lisbon", "Carthage", "Jerusalem", "Angkor Wat", "Samarkand", "Mexico City"
+        });
+        PURPOSE_CITY_MAP.put("Food & Nightlife", new String[]{
+            "Tokyo", "Bangkok", "Osaka", "New Orleans", "Barcelona", "Mumbai", "Paris", "Berlin", "Hong Kong", 
+            "Seoul", "Singapore", "Las Vegas", "Tel Aviv", "Madrid", "Brussels", "Lyons"
+        });
     }
+
+    private static final java.util.Random RANDOM = new java.util.Random(System.nanoTime());
 
     private static String purposeToQuery(String purpose) {
         if (purpose == null) return "famous travel destinations";
@@ -41,7 +55,7 @@ public class TravelSearchServlet extends HttpServlet {
         }
 
         if (cities != null && cities.length > 0) {
-            return cities[new java.util.Random().nextInt(cities.length)];
+            return cities[RANDOM.nextInt(cities.length)];
         }
         return "popular travel destinations";
     }

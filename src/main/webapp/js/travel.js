@@ -20,7 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=${name}`;
 
             // Show Admin Link if eligible
-            if (user.email.includes('admin') || user.email === 'admin@intellirec.com') {
+            const authorizedAdminList = ['aliya@gmail.com', 'madhu@gmail.com', 'gul@gmail.com'];
+            const isAdmin = authorizedAdminList.includes(user.email.toLowerCase());
+
+            if (isAdmin) {
                 if (document.getElementById('admin-nav-item')) {
                     document.getElementById('admin-nav-item').style.display = 'block';
                 }
@@ -68,27 +71,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ─── Main Load Function ──────────────────────────────
-async function loadTravel(purpose, query) {
+async function loadTravel(purpose, query = '') {
     console.log(`[Travel] Loading: ${purpose}, Query: "${query}"`);
     const grid = document.getElementById('travel-grid');
-    
+    const requestId = ++currentTravelRequestId;
+
     showLoading(true);
     hideStates();
 
+    // Budget check
+    const callCount = parseInt(localStorage.getItem('travel_api_calls') || '0');
+    if (callCount >= 100) {
+        console.error('[Travel] Daily budget reached.');
+        showLoading(false);
+        showError('Daily discovery limit reached (100/100). Please try again tomorrow.');
+        updateBudgetBadge();
+        return;
+    }
+
     try {
         const results = await ApiClient.getTravel(purpose, query);
+        
+        // Race condition check
+        if (requestId !== currentTravelRequestId) return;
+
         console.log(`[Travel] Results received:`, results);
-
         showLoading(false);
-
-        // Budget check
-        const callCount = parseInt(localStorage.getItem('travel_api_calls') || '0');
-        if (callCount >= 100) {
-            console.error('[Travel] Daily budget of 100 calls reached.');
-            showError('Daily discovery limit reached (100/100). Please try again tomorrow.');
-            updateBudgetBadge();
-            return;
-        }
 
         if (!results || results.length === 0) {
             console.warn('[Travel] No results found.');
@@ -104,6 +112,7 @@ async function loadTravel(purpose, query) {
         console.log(`[Travel] Rendered children: ${grid.children.length}`);
 
     } catch (err) {
+        if (requestId !== currentTravelRequestId) return;
         showLoading(false);
         showError('Unable to load destinations. Please check your connection.');
         console.error('[Travel Page] Load error:', err);

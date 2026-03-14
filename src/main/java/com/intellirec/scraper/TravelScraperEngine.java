@@ -151,6 +151,7 @@ public class TravelScraperEngine {
             for (int i = 0; i < placesArray.length() && results.size() < 12; i++) {
                 try {
                     JSONObject place = placesArray.getJSONObject(i);
+                    String xid = place.optString("xid", "");
 
                     // ✅ Fixed Bug 3: Skip unnamed places FIRST before any other processing
                     String placeName = place.optString("name", "").trim();
@@ -158,30 +159,43 @@ public class TravelScraperEngine {
                         continue;
                     }
 
-                    int    dist      = place.optInt("dist", 0);
-                    int    rate      = place.optInt("rate",  3);
-                    String placeKinds = place.optString("kinds", "")
-                                            .replace(",", ", ")
-                                            .replace("_", " ");
+                    // ─────────────────────────────────────────
+                    // STEP 2.5: Fetch precise details (Images & Descr)
+                    // ─────────────────────────────────────────
+                    System.out.println("[TravelScraper] + Fetching details for XID: " + xid);
+                    JSONObject details = getDetailsForXid(xid);
+                    
+                    String image = "";
+                    if (details.has("preview")) {
+                        image = details.getJSONObject("preview").optString("source", "");
+                    }
+                    
+                    String description = "";
+                    if (details.has("wikipedia_extracts")) {
+                        description = details.getJSONObject("wikipedia_extracts").optString("text", "");
+                    } else if (details.has("info")) {
+                        description = details.getJSONObject("info").optString("descr", "");
+                    }
 
-                    // ✅ Fixed Bug 4: Convert OTM 0-7 scale to 0-10 scale for UI
+                    // Fallback to auto-gen if empty
+                    if (image.isEmpty() || image.contains("placeholder")) {
+                        image = fallbackImages[imageIndex % fallbackImages.length];
+                        imageIndex++;
+                    }
+
+                    if (description.isEmpty() || description.length() < 20) {
+                        int dist = place.optInt("dist", 0);
+                        String distStr = dist >= 1000 ? String.format("%.1f km", dist / 1000.0) : dist + " meters";
+                        String pk = place.optString("kinds", "").replace(",", ", ").replace("_", " ");
+                        description = "A popular " + pk + " destination located " + distStr + " from " + baseName + ".";
+                    }
+
+                    int    rate      = place.optInt("rate",  3);
                     double ratingOutOf10 = Math.round((rate / 7.0) * 10.0 * 10.0) / 10.0;
                     String ratingStr     = String.format("%.1f", ratingOutOf10);
 
-                    // Build a clean readable description
-                    String distStr    = dist >= 1000
-                        ? String.format("%.1f km", dist / 1000.0)
-                        : dist + " meters";
-                    String description = "A popular " + placeKinds + " destination located "
-                        + distStr + " from the center of " + baseName + ", " + country + ".";
-
-                    // ✅ Fixed Bug 1: Use stable direct Unsplash photo URLs
-                    // Rotating through category-matched fallback images
-                    String image = fallbackImages[imageIndex % fallbackImages.length];
-                    imageIndex++;
-
-                    String exploreUrl = "https://www.google.com/search?q="
-                        + URLEncoder.encode(placeName + " " + baseName + " " + country, "UTF-8");
+                    String exploreUrl = details.optString("otm", "https://www.google.com/search?q="
+                        + URLEncoder.encode(placeName + " " + baseName + " " + country, "UTF-8"));
 
                     TravelDestination dest = new TravelDestination(
                         UUID.randomUUID().toString(),
@@ -195,6 +209,9 @@ public class TravelScraperEngine {
 
                     results.add(dest);
                     System.out.println("[TravelScraper] ✓ Added: " + placeName);
+                    
+                    // Respect OTM rate limits (1 request per second for free tier)
+                    Thread.sleep(200);
 
                 } catch (Exception e) {
                     System.err.println("[TravelScraper] Skipping place " + i + ": " + e.getMessage());
@@ -209,6 +226,21 @@ public class TravelScraperEngine {
         }
 
         return results;
+    }
+
+    /**
+     * Fetches detailed info about a specific place (Image, Description, etc.)
+     */
+    private JSONObject getDetailsForXid(String xid) {
+        try {
+            String response = httpGetWithHeaders(OTM_XID_URL + xid);
+            if (response != null && !response.trim().isEmpty()) {
+                return new JSONObject(response);
+            }
+        } catch (Exception e) {
+            System.err.println("[TravelScraper] Failed to fetch XID details: " + e.getMessage());
+        }
+        return new JSONObject();
     }
 
     /**

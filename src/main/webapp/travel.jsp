@@ -34,13 +34,13 @@
         <p>Real-time destination recommendations powered by OpenTripMap.</p>
     </div>
 
-    <div class="filter-section" style="max-width: 1000px; display: flex; flex-direction: column; gap: 20px;">
+    <div class="filter-section" style="max-width: 1000px; margin: 0 auto 50px;">
         <div style="display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
             <div class="filter-group" style="flex: 2; min-width: 300px;">
                 <label>Search City or Destination</label>
                 <div style="position: relative;">
-                    <input type="text" id="travelSearchInput" class="form-control" placeholder="e.g. Paris, Tokyo, Bali..." style="padding-left: 35px; width: 100%;">
-                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;"></i>
+                    <input type="text" id="travelSearchInput" class="form-control" placeholder="e.g. Paris, Tokyo, Bali..." style="padding-left: 45px; width: 100%;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); opacity: 0.5;"></i>
                 </div>
             </div>
             <div class="filter-group" style="flex: 1; min-width: 250px;">

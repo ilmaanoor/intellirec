@@ -343,12 +343,23 @@ const ApiClient = {
         console.log(`[Travel] Request → purpose="${purpose}" | query="${term}"`);
 
         // ─────────────────────────────────────────
-        // CACHE CHECK — return instantly if available
+        // CACHE & FORCE-FRESH LOGIC
         // ─────────────────────────────────────────
         const cacheKey = `${purpose}_${term}`.toLowerCase().trim();
-        if (this._travelCache[cacheKey]) {
-            console.log(`[Travel] Cache hit → "${cacheKey}" (no API call made)`);
+        const isExplicitSearch = searchQuery && searchQuery.trim() !== '';
+
+        if (!isExplicitSearch && this._travelCache[cacheKey]) {
+            console.log(`[Travel] Serving cached results for: "${cacheKey}"`);
             return this._travelCache[cacheKey];
+        }
+
+        // Add Cache buster (timestamp) to ensure we hit the live API
+        const buster = new Date().getTime();
+        const url = `/intellirec/travel-search?query=${encodeURIComponent(term)}&purpose=${encodeURIComponent(purpose)}&t=${buster}`;
+        
+        console.log(`[Travel] Fetching live data: ${url}`);
+        if (isExplicitSearch) {
+            console.log(`[Travel] Explicit Live Search → "${term}" (Bypassing cache)`);
         }
 
         // ─────────────────────────────────────────

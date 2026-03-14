@@ -18,8 +18,10 @@
 
 /* ── Layout Overrides (Matching Global) ── */
 .page-header {
-    padding: 120px 20px 40px;
+    padding: 140px 20px 40px;
     text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
 }
 
 .page-header h1 {
@@ -36,11 +38,15 @@
 
 .filter-section {
     background: white;
-    padding: 25px;
-    border-radius: 20px;
+    padding: 30px;
+    border-radius: 24px;
     box-shadow: var(--card-shadow);
     margin: 0 auto 50px;
     border: 1px solid var(--border-light);
+    max-width: 1000px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 .filter-group label {
@@ -103,11 +109,11 @@
 /* ── Travel Grid ────────────────────────── */
 .travel-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     gap: 30px;
     max-width: 1200px;
-    margin: 0 auto 60px;
-    padding: 0 20px;
+    margin: 0 auto 80px;
+    padding: 0 40px;
 }
 
 /* ── Travel Card ────────────────────────── */

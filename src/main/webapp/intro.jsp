@@ -220,10 +220,8 @@
                 console.log("Welcome,", name, "| Email:", user.email);
 
                 // Show Admin Link if eligible
-                // LOOSENED: Allow any email containing 'admin' OR the specific admin address OR any 'ilmaa' address (assuming user)
-                const isAdmin = user.email.toLowerCase().includes('admin') || 
-                                user.email === 'admin@intellirec.com' ||
-                                user.email.toLowerCase().includes('ilmaa');
+                const authorizedAdminList = ['aliya@gmail.com', 'madhu@gmail.com', 'gul@gmail.com'];
+                const isAdmin = authorizedAdminList.includes(user.email.toLowerCase());
 
                 if (isAdmin) {
                     console.log("Admin access GRANTED.");
