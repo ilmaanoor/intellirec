@@ -1,6 +1,7 @@
 /**
- * Intellirec AI - Central API Client v16.0 - FULLY REAL-TIME
+ * Intellirec AI - Central API Client v17.0 - FULLY REAL-TIME
  * All four recommendation engines now pull live data dynamically based on user filters.
+ * Features: Daily Budget Guard, OTM Source Alignment, Tab Visibility Check.
  */
 
 const API_CONFIG = {

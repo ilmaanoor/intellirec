@@ -23,11 +23,15 @@ public class TravelSearchServlet extends HttpServlet {
     private static String purposeToQuery(String purpose) {
         if (purpose == null) return "famous travel destinations";
         switch (purpose.trim()) {
-            case "Adventure":  return "adventure travel destinations";
-            case "Culture":    return "world heritage sites";
-            case "Food":       return "culinary tourism destinations";
+            case "Adventure":
+            case "Adventure & Sports":  return "adventure travel destinations";
+            case "Culture":
+            case "Cultural Discovery":  return "world heritage sites";
+            case "Food":
+            case "Food & Nightlife":    return "culinary tourism destinations";
             case "Vacation":
-            default:           return "popular travel destinations";
+            case "Relaxing Vacation":   return "popular travel destinations";
+            default:                    return "popular travel destinations";
         }
     }
 
