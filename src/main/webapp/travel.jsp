@@ -299,8 +299,9 @@
                     var card = document.createElement('div');
                     card.className = 'travel-card';
 
-                    var ratingNumeric = parseFloat(dest.rating) || 4;
-                    var stars = '\u2605'.repeat(Math.min(5, Math.round(ratingNumeric)));
+                    var ratingNumeric = parseFloat(dest.rating) || 8;
+                    // Scale 0-10 OTM rating to 0-5 stars
+                    var stars = '\u2605'.repeat(Math.min(5, Math.round(ratingNumeric / 2)));
 
                     // Use Unsplash as fallback image
                     var imgSrc = (dest.img && dest.img.length > 15)
