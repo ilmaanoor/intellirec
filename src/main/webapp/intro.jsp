@@ -159,7 +159,7 @@
             <li><a href="songs.jsp">Songs</a></li>
             <li><a href="gifts.jsp">Gifts</a></li>
             <li><a href="travel.jsp">Travel</a></li>
-            <li id="admin-nav-item" style="display: none;"><a href="admin.jsp" style="color: var(--accent);">Admin</a></li>
+            <li id="admin-nav-item" style="display: none;"><a href="/admin/admin.jsp" style="color: var(--accent);">Admin</a></li>
         </ul>
 
         <div class="nav-user">
@@ -196,9 +196,13 @@
             </a>
         </div>
 
+        <div class="hero-content">
+            <h1 class="hero-headline">Perfect Discovery<br>Powered by Intelligence</h1>
+            <p class="hero-tagline">Curated recommendations for everything you love, tailored to your personality.</p>
             <div class="hero-actions">
                 <a href="categories.jsp" class="btn-primary-site">Start Exploration</a>
             </div>
+        </div>
     </div>
 
     <script src="js/firebase-app-compat.js"></script>
