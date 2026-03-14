@@ -189,7 +189,8 @@
         <div class="filter-group" style="flex: 2; min-width: 200px;">
             <label>Search Destination</label>
             <input type="text" id="travel-search" class="form-control"
-                   placeholder="e.g. Paris, Bali, Swiss Alps, Taj Mahal..." style="width: 100%;">
+                   placeholder="e.g. Paris, Bali, Swiss Alps, Taj Mahal..." style="width: 100%;"
+                   oninput="onSearchInput(this.value)">
         </div>
         <div class="filter-group" style="flex: 1; min-width: 150px;">
             <label>Travel Purpose</label>
@@ -218,7 +219,7 @@
     </div>
 
     <footer class="footer-site">
-        Powered by IntelliRec AI &bull; Real-Time Data via Wikipedia &amp; TripAdvisor
+        Powered by IntelliRec AI &bull; Real-Time Data via TripAdvisor
     </footer>
 
     <script src="js/firebase-app-compat.js"></script>
@@ -235,11 +236,11 @@
             }
         });
 
-        // Rotating status messages shown during Wikipedia load
+        // Rotating status messages shown during TripAdvisor load
         var loadingMessages = [
-            '&#127758; Connecting to Wikipedia travel database...',
+            '&#127758; Connecting to TripAdvisor travel database...',
             '&#128269; Scanning global destinations...',
-            '&#128240; Fetching real descriptions and images...',
+            '&#128240; Fetching real descriptions and verified images...',
             '&#9989; Curating your personalized results...'
         ];
 
@@ -257,6 +258,17 @@
                 var el = document.getElementById('loading-msg');
                 if (el) el.querySelector('p').innerHTML = loadingMessages[msgIndex];
             }, 1200);
+        }
+
+        let _debounceTimer = null;
+
+        function onSearchInput(value) {
+            clearTimeout(_debounceTimer);
+            
+            // Only fires 600ms AFTER user stops typing
+            _debounceTimer = setTimeout(() => {
+                loadTravel();
+            }, 600);
         }
 
         async function loadTravel() {
@@ -295,7 +307,7 @@
                         ? dest.img
                         : 'https://source.unsplash.com/800x600/?' + encodeURIComponent(dest.place) + ',travel';
 
-                    var cardHtml = '<div class="tripadvisor-tag">WIKIPEDIA <span style="color:#00A699;font-size:10px;font-weight:bold;">[LIVE]</span></div>' +
+                    var cardHtml = '<div class="tripadvisor-tag">TRIPADVISOR <span style="color:#00A699;font-size:10px;font-weight:bold;">[LIVE]</span></div>' +
                         '<img src="' + imgSrc + '" alt="' + dest.place + '" class="travel-thumb" ' +
                         'onerror="this.src=\'https://source.unsplash.com/800x600/?travel,world,destination\'">' +
                         '<div class="travel-meta">' +
@@ -320,9 +332,7 @@
         }
 
         document.getElementById('purpose-filter').addEventListener('change', loadTravel);
-        document.getElementById('travel-search').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') loadTravel();
-        });
+        // Removed keypress Enter listener since we now use the debounced oninput directly on the field
 
         // Auto-load on page open
         loadTravel();

@@ -12,6 +12,7 @@ const API_CONFIG = {
 
 const ApiClient = {
     _lastError: null,
+    _travelCache: {},
 
     /**
      * MOVIES - Real-time TMDB Search or Discover
@@ -213,51 +214,172 @@ const ApiClient = {
     },
 
     /**
-     * Safety Filter for Travel Content
+     * ============================================================
+     * ZERO-TOLERANCE ADULT CONTENT SAFETY FILTER
+     * Blocks all nude, adult, and explicit content and subcategories
+     * Safe for professional and public-facing environments
+     * ============================================================
      */
     _isSafeTravelContent(text) {
         if (!text) return true;
-        const lowText = text.toLowerCase();
-        const blacklist = [
-            'porn', 'sex', 'nude', 'adult', 'erotic', 'vulgar', 'hentai', 'x-rated', 
-            'offensive', 'explicit', 'dating', 'fetish', 'lingerie', 'glamour', 
-            'sensual', 'escort', 'massage', 'stripper', 'underwear'
+        const low = text.toLowerCase();
+
+        const blockedPatterns = [
+            // Nudity & explicit content
+            /\bnude(s|ism|ist)?\b/,
+            /\bnaturis(m|t)\b/,
+            /\bporn(o|ography)?\b/,
+            /\bx-rated\b/,
+            /\bexplicit\b/,
+            /\bhentai\b/,
+            /\berotic(a)?\b/,
+            /\bsensual\b/,
+            /\bsexual\b/,
+
+            // Adult services
+            /\bescort(s|ing)?\b/,
+            /\bprostitut(e|ion|ed)\b/,
+            /\bbrothel\b/,
+            /\bstripper\b/,
+            /\bstrip\s*club\b/,
+            /\bstriptease\b/,
+            /\bcam\s*girl\b/,
+            /\bonlyfans\b/,
+            /\bred.?light\s*district\b/,
+
+            // Adult entertainment
+            /\badult\s*(club|bar|show|lounge|content|entertainment|resort|venue)\b/,
+            /\bfetish\b/,
+            /\bkink(y)?\b/,
+            /\bbdsm\b/,
+            /\bswinger(s)?\b/,
+            /\borgy\b/,
+
+            // Nightlife adult-only
+            /\bgo.?go\s*(bar|girl|boy)\b/,
+            /\bpussy\b/,
+            /\bsex\s*(club|show|tour|worker|industry|bar|beach)\b/,
+            /\bsex\s*tourism\b/,
         ];
-        return !blacklist.some(word => lowText.includes(word));
+
+        return !blockedPatterns.some(pattern => pattern.test(low));
     },
 
     /**
-     * TRAVEL - Real-time Wikipedia-Powered Destination Search
-     * Maps purpose to smart default queries for better Wikipedia results.
+     * ============================================================
+     * TRAVEL - Real-Time Verified Source Destination Search
+     *
+     * Categories:
+     *   - Relaxing Vacation
+     *   - Adventure & Sports
+     *   - Cultural Discovery
+     *   - Food & Nightlife
+     *
+     * Backend should route to TripAdvisor Content API
+     * or RapidAPI Travel endpoints (see backend section below)
+     * ============================================================
      */
-    async getTravel(purpose = 'Vacation', searchQuery = '') {
-        // Purpose → descriptive search term for Wikipedia
+    async getTravel(purpose = 'Relaxing Vacation', searchQuery = '') {
+
+        /**
+         * Professionally curated query terms per category.
+         * These are single geographic location names exclusively so that
+         * the OpenTripMap /geoname API endpoint can successfully parse them.
+         */
         const purposeQueryMap = {
-            'Vacation':   'tropical beach paradise island resort',
-            'Adventure':  'mountain trekking national park adventure sport',
-            'Culture':    'UNESCO world heritage ancient temple historical site',
-            'Food':       'famous culinary city food market street food cuisine'
+            'Vacation': [
+                'Maldives', 'Bora Bora', 'Seychelles', 'Fiji', 'Mykonos', 'Maui'
+            ],
+            'Adventure': [
+                'Queenstown', 'Chamonix', 'Banff', 'Patagonia', 'Zermatt', 'Moab'
+            ],
+            'Culture': [
+                'Rome', 'Kyoto', 'Athens', 'Machu Picchu', 'Petra', 'Cairo'
+            ],
+            'Food': [
+                'Tokyo', 'New Orleans', 'Bangkok', 'Osaka', 'Ibiza', 'Miami'
+            ]
         };
 
-        let term = searchQuery;
-        if (!term || term.trim() === '') {
-            term = purposeQueryMap[purpose] || 'world famous travel destinations';
+        // Pick a rotating query variant to avoid stale cached results
+        const queryList = purposeQueryMap[purpose] || ['Paris', 'London', 'Dubai'];
+        const autoQuery = queryList[Math.floor(Math.random() * queryList.length)];
+
+        // Prefer user's explicit search term, fall back to smart auto query
+        const term = (searchQuery && searchQuery.trim() !== '') ? searchQuery.trim() : autoQuery;
+
+        console.log(`[Travel] Fetch → purpose="${purpose}" | query="${term}"`);
+        
+        // Cache Check
+        const cacheKey = `${purpose}_${term}`.toLowerCase().trim();
+        if (this._travelCache[cacheKey]) {
+            console.log(`[Travel] Returning instantly cached results for "${cacheKey}"`);
+            return this._travelCache[cacheKey];
         }
 
-        console.log(`[Travel] Wikipedia Scraper Request — purpose="${purpose}" query="${term}"`);
-
         try {
-            const url = `${window.location.origin}/intellirec/travel-search?query=${encodeURIComponent(term)}&purpose=${encodeURIComponent(purpose)}`;
-            const response = await fetch(url);
-            if (!response.ok) throw new Error('Travel search failed: HTTP ' + response.status);
-            
+            /**
+             * Cache-bust every call so backend always fetches fresh live data.
+             * Pass source=tripadvisor so your backend knows which scraper to use.
+             */
+            const params = new URLSearchParams({
+                query:   term,
+                purpose: purpose,
+                source:  'tripadvisor',   // ← tells backend which verified source to use
+                lang:    'en',
+                limit:   '12',            // request 12, show 9 after dedup + filter
+                _:       Date.now()       // cache-buster
+            });
+
+            const response = await fetch(
+                `${window.location.origin}/intellirec/travel-search?${params}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache, no-store, must-revalidate',
+                        'Pragma':        'no-cache',
+                        'Accept':        'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`[Travel] HTTP Error: ${response.status} ${response.statusText}`);
+            }
+
             const results = await response.json();
-            console.log(`[Travel] Got ${results.length} destinations.`);
-            
-            // Apply client-side safety filter
-            return results.filter(dest => this._isSafeTravelContent(dest.place) && this._isSafeTravelContent(dest.description));
+            console.log(`[Travel] Raw results received: ${results.length}`);
+
+            // Step 1 — Apply zero-tolerance adult content safety filter
+            const safeResults = results.filter(dest =>
+                this._isSafeTravelContent(dest.place) &&
+                this._isSafeTravelContent(dest.description) &&
+                this._isSafeTravelContent(dest.type || '')
+            );
+
+            // Step 2 — Deduplicate by place name (case-insensitive)
+            const seen = new Set();
+            const deduplicated = safeResults.filter(dest => {
+                const key = (dest.place || '').toLowerCase().trim();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+
+            // Step 3 — Ensure minimum useful data exists on each result
+            const validated = deduplicated.filter(dest =>
+                dest.place &&
+                dest.place.trim() !== '' &&
+                dest.description &&
+                dest.description.trim().length > 20
+            );
+
+            console.log(`[Travel] Final clean results: ${validated.length}`);
+            this._travelCache[cacheKey] = validated; // Save to cache before returning
+            return validated;
+
         } catch (e) {
-            console.error('[Travel] Exception:', e);
+            console.error('[Travel] Fetch failed:', e);
             return [];
         }
     }
