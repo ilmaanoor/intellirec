@@ -74,15 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ─── Main Load Function ──────────────────────────────
 async function loadTravel(purpose, query) {
+    console.log(`[Travel] Loading: ${purpose}, Query: "${query}"`);
     showLoading(true);
     hideStates();
 
     try {
         const results = await ApiClient.getTravel(purpose, query);
+        console.log(`[Travel] Results received:`, results);
 
         showLoading(false);
 
         if (!results || results.length === 0) {
+            console.warn('[Travel] No results found.');
             document.getElementById('travelEmpty').style.display = 'flex';
             updateHeader(0, purpose, query);
             return;
@@ -92,10 +95,14 @@ async function loadTravel(purpose, query) {
         updateHeader(results.length, purpose, query);
         updateBudgetBadge();
 
+        // Extra check for visibility
+        const grid = document.getElementById('travelGrid');
+        console.log(`[Travel] Grid visibility: ${grid.style.display}, Child count: ${grid.children.length}`);
+
     } catch (err) {
         showLoading(false);
         showError('Could not load destinations: ' + err.message);
-        console.error('[Travel Page]', err);
+        console.error('[Travel Page] Load error:', err);
     }
 }
 

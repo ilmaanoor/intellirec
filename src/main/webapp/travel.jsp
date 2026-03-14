@@ -5,32 +5,38 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>IntelliRec — Travel</title>
+    <link rel="stylesheet" href="css/global.css"/>
     <link rel="stylesheet" href="css/travel.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 </head>
 <body>
 
 <!-- ═══════════════════════════════════════════
-     NAVBAR
+     GLOBAL NAVBAR
 ════════════════════════════════════════════ -->
-<nav class="navbar">
-    <div class="nav-brand">
-        <i class="fa-solid fa-brain"></i>
-        <span>IntelliRec</span>
-    </div>
-    <div class="nav-links">
-        <a href="index.jsp">Home</a>
-        <a href="movies.jsp">Movies</a>
-        <a href="songs.jsp">Songs</a>
-        <a href="gifts.jsp">Gifts</a>
-        <a href="travel.jsp" class="active">Travel</a>
+<nav class="navbar-global">
+    <a href="index.jsp" class="nav-brand">Intelli<span>Rec AI</span></a>
+    
+    <ul class="nav-links-global">
+        <li><a href="intro.jsp">Home</a></li>
+        <li><a href="movies.jsp">Movies</a></li>
+        <li><a href="songs.jsp">Songs</a></li>
+        <li><a href="gifts.jsp">Gifts</a></li>
+        <li><a href="travel.jsp" class="active">Travel</a></li>
+    </ul>
+
+    <div class="nav-user">
+        <img id="user-avatar" src="https://ui-avatars.com/api/?background=F9A825&color=white&name=User" alt="Avatar">
+        <a href="#" id="logout-btn" class="btn-logout-nav" title="Sign Out">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </a>
     </div>
 </nav>
 
 <!-- ═══════════════════════════════════════════
      HERO SECTION
 ════════════════════════════════════════════ -->
-<section class="travel-hero">
+<section class="travel-hero" style="margin-top: 100px;">
     <div class="hero-overlay"></div>
     <div class="hero-content">
         <h1><i class="fa-solid fa-earth-americas"></i> Discover Your Next Adventure</h1>
