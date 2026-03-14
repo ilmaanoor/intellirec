@@ -196,16 +196,9 @@
             </a>
         </div>
 
-        <div class="hero-content">
-            <h1 class="hero-headline">Perfect Discovery<br>Powered by Intelligence</h1>
-            <p class="hero-tagline">Curated recommendations for everything you love, tailored to your personality.</p>
             <div class="hero-actions">
                 <a href="categories.jsp" class="btn-primary-site">Start Exploration</a>
-                <a href="admin.jsp" id="admin-hero-btn" class="btn-secondary-site" style="display: none; background: rgba(249, 168, 37, 0.1); border: 2px solid var(--primary); color: var(--text-dark); margin-left: 15px;">
-                    <i class="fa-solid fa-gauge-high"></i> Control Center
-                </a>
             </div>
-        </div>
     </div>
 
     <script src="js/firebase-app-compat.js"></script>
@@ -226,15 +219,12 @@
                 // LOOSENED: Allow any email containing 'admin' OR the specific admin address OR any 'ilmaa' address (assuming user)
                 const isAdmin = user.email.toLowerCase().includes('admin') || 
                                 user.email === 'admin@intellirec.com' ||
-                                user.email.toLowerCase().includes('ilmaa'); // Tentative check for user
+                                user.email.toLowerCase().includes('ilmaa');
 
                 if (isAdmin) {
                     console.log("Admin access GRANTED.");
                     if (document.getElementById('admin-nav-item')) {
                         document.getElementById('admin-nav-item').style.display = 'block';
-                    }
-                    if (document.getElementById('admin-hero-btn')) {
-                        document.getElementById('admin-hero-btn').style.display = 'inline-flex';
                     }
                 } else {
                     console.log("Admin access DENIED.");

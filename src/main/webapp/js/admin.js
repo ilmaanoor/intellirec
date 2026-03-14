@@ -11,24 +11,18 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function verifyAdmin() {
-    firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
-            window.location.href = 'login.jsp';
-            return;
-        }
+        // Admin check: matches intro.jsp logic
+        const isAdmin = user.email.toLowerCase().includes('admin') || 
+                        user.email === 'admin@intellirec.com' ||
+                        user.email.toLowerCase().includes('ilmaa');
 
-        const name = user.displayName || user.email.split('@')[0];
-        document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=${name}`;
-
-        // Basic admin check (can be expanded)
-        const isAdmin = user.email.includes('admin') || user.email === 'admin@intellirec.com';
         if (!isAdmin) {
-            log('warn', `Access denied for user: ${user.email}`);
-            setTimeout(() => { window.location.href = 'intro.jsp'; }, 2000);
+            log('error', `Access denied: ${user.email} is not authorized.`);
+            setTimeout(() => { window.location.href = 'intro.jsp'; }, 2500);
             return;
         }
         
-        log('success', `Admin authenticated: ${user.email}`);
+        log('success', `Admin access granted. Welcome back, ${name}.`);
     });
 }
 
