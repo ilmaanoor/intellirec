@@ -27,22 +27,38 @@
         }
     }
 
+    // CORS and OPTIONS handling
+    if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "Content-Type, X-RapidAPI-Key, X-RapidAPI-Host, Authorization");
+        response.setStatus(HttpServletResponse.SC_OK);
+        return;
+    }
+
     HttpURLConnection proxy_conn = null;
     try {
+        System.out.println("[Proxy] Fetching: " + proxy_apiURL);
         URL proxy_url = new URL(proxy_apiURL);
         proxy_conn = (HttpURLConnection) proxy_url.openConnection();
         proxy_conn.setRequestMethod("GET");
         proxy_conn.setConnectTimeout(15000);
         proxy_conn.setReadTimeout(15000);
-        proxy_conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36");
+        proxy_conn.setRequestProperty("User-Agent", "Mozilla/5.0");
         
-        // Forward Authorization header if present (useful for Spotify)
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null) {
-            proxy_conn.setRequestProperty("Authorization", authHeader);
+        // Forward headers
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String name = headerNames.nextElement();
+            if (name.equalsIgnoreCase("X-RapidAPI-Key") || name.equalsIgnoreCase("X-RapidAPI-Host") || name.equalsIgnoreCase("Authorization")) {
+                proxy_conn.setRequestProperty(name, request.getHeader(name));
+                System.out.println("[Proxy] Forwarding Header: " + name);
+            }
         }
         
         int proxy_code = proxy_conn.getResponseCode();
+        System.out.println("[Proxy] Response: " + proxy_code);
+
         
         if (proxy_code == HttpURLConnection.HTTP_OK || proxy_code == HttpURLConnection.HTTP_CREATED) {
             BufferedReader proxy_reader = new BufferedReader(new InputStreamReader(proxy_conn.getInputStream(), "UTF-8"));

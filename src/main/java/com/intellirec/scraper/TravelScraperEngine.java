@@ -20,9 +20,9 @@ import java.util.UUID;
 public class TravelScraperEngine {
 
     private static final String OTM_HOST        = "opentripmap-places-v1.p.rapidapi.com";
-    private static final String OTM_GEONAME_URL = "https://opentripmap-places-v1.p.rapidapi.com/0.1/en/places/geoname";
-    private static final String OTM_RADIUS_URL  = "https://opentripmap-places-v1.p.rapidapi.com/0.1/en/places/radius";
-    private static final String OTM_XID_URL     = "https://opentripmap-places-v1.p.rapidapi.com/0.1/en/places/xid/";
+    private static final String OTM_GEONAME_URL = "https://opentripmap-places-v1.p.rapidapi.com/en/places/geoname";
+    private static final String OTM_RADIUS_URL  = "https://opentripmap-places-v1.p.rapidapi.com/en/places/radius";
+    private static final String OTM_XID_URL     = "https://opentripmap-places-v1.p.rapidapi.com/en/places/xid/";
 
     // ✅ Move this to environment variable or config file before submitting project
     private static final String RAPIDAPI_KEY = "2c69522dbemsha9318c53260b796p168040jsn31c8f1944d9b";

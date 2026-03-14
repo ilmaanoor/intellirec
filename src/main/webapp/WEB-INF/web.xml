@@ -6,16 +6,25 @@
   version="3.1">
     <display-name>IntelliRec</display-name>
     
-    <!-- 
+    
     <servlet>
-        <servlet-name>RecommendationServlet</servlet-name>
-        <servlet-class>com.intellirec.servlet.RecommendationServlet</servlet-class>
+        <servlet-name>TravelSearchServlet</servlet-name>
+        <servlet-class>com.intellirec.servlet.TravelSearchServlet</servlet-class>
     </servlet>
     <servlet-mapping>
-        <servlet-name>RecommendationServlet</servlet-name>
-        <url-pattern>/getRecommendations</url-pattern>
+        <servlet-name>TravelSearchServlet</servlet-name>
+        <url-pattern>/travel-search</url-pattern>
     </servlet-mapping>
-    -->
+
+    <servlet>
+        <servlet-name>MarketSearchServlet</servlet-name>
+        <servlet-class>com.intellirec.servlet.MarketSearchServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>MarketSearchServlet</servlet-name>
+        <url-pattern>/market-search</url-pattern>
+    </servlet-mapping>
+    
 
     <welcome-file-list>
         <welcome-file>index.jsp</welcome-file>

@@ -135,6 +135,13 @@ const ApiClient = {
                 'Focus':    ['Hindi instrumental', 'Indian classical music'],
                 'Workout':  ['Hindi workout songs', 'desi beats'],
                 'Romantic': ['Hindi romantic songs', 'Bollywood love songs']
+            },
+            'Tamil': {
+                'Happy':    ['Tamil kuthu songs', 'Tamil dance hits'],
+                'Chill':    ['Tamil melodies', 'Tamil instrumental chill'],
+                'Focus':    ['Tamil Carnatic vocal', 'Tamil soothing flute'],
+                'Workout':  ['Tamil high energy beats', 'Tamil exercise songs'],
+                'Romantic': ['Tamil romantic hits', 'Tamil love melodies']
             }
         };
 
