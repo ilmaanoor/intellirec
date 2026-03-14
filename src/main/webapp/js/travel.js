@@ -84,6 +84,15 @@ async function loadTravel(purpose, query) {
 
         showLoading(false);
 
+        // Budget check: if results is empty, check if it's due to budget
+        const callCount = parseInt(localStorage.getItem('travel_api_calls') || '0');
+        if (callCount >= 100) {
+            console.error('[Travel] Daily budget of 100 calls reached.');
+            showError('Daily discovery limit reached (100/100). Please try again tomorrow.');
+            updateBudgetBadge();
+            return;
+        }
+
         if (!results || results.length === 0) {
             console.warn('[Travel] No results found.');
             document.getElementById('travelEmpty').style.display = 'flex';
