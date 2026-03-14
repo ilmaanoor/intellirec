@@ -19,20 +19,31 @@ public class TravelSearchServlet extends HttpServlet {
 
     private final TravelScraperEngine scraperEngine = new TravelScraperEngine();
 
-    // Maps "purpose" dropdown value → smart Wikipedia search term
+    private static final java.util.Map<String, String[]> PURPOSE_CITY_MAP = new java.util.HashMap<>();
+    static {
+        PURPOSE_CITY_MAP.put("Relaxing Vacation", new String[]{"Maldives", "Bora Bora", "Seychelles", "Fiji", "Mykonos", "Maui"});
+        PURPOSE_CITY_MAP.put("Adventure & Sports", new String[]{"Queenstown", "Chamonix", "Banff", "Patagonia", "Zermatt", "Moab"});
+        PURPOSE_CITY_MAP.put("Cultural Discovery", new String[]{"Rome", "Kyoto", "Athens", "Cairo", "Petra", "Istanbul"});
+        PURPOSE_CITY_MAP.put("Food & Nightlife", new String[]{"Tokyo", "Bangkok", "Osaka", "New Orleans", "Barcelona", "Mumbai"});
+    }
+
     private static String purposeToQuery(String purpose) {
         if (purpose == null) return "famous travel destinations";
-        switch (purpose.trim()) {
-            case "Adventure":
-            case "Adventure & Sports":  return "adventure travel destinations";
-            case "Culture":
-            case "Cultural Discovery":  return "world heritage sites";
-            case "Food":
-            case "Food & Nightlife":    return "culinary tourism destinations";
-            case "Vacation":
-            case "Relaxing Vacation":   return "popular travel destinations";
-            default:                    return "popular travel destinations";
+        String trimmed = purpose.trim();
+        String[] cities = PURPOSE_CITY_MAP.get(trimmed);
+        
+        // Handle legacy or unknown categories
+        if (cities == null) {
+            if (trimmed.equals("Adventure")) cities = PURPOSE_CITY_MAP.get("Adventure & Sports");
+            else if (trimmed.equals("Culture")) cities = PURPOSE_CITY_MAP.get("Cultural Discovery");
+            else if (trimmed.equals("Food")) cities = PURPOSE_CITY_MAP.get("Food & Nightlife");
+            else if (trimmed.equals("Vacation")) cities = PURPOSE_CITY_MAP.get("Relaxing Vacation");
         }
+
+        if (cities != null && cities.length > 0) {
+            return cities[new java.util.Random().nextInt(cities.length)];
+        }
+        return "popular travel destinations";
     }
 
     @Override
