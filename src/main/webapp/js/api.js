@@ -12,7 +12,14 @@ const API_CONFIG = {
 
 const ApiClient = {
     _lastError: null,
+
+    // ✅ Bug 2 Fixed — cache properly initialized
     _travelCache: {},
+    _apiCallTracker: {
+        count: parseInt(localStorage.getItem('travel_api_calls') || '0'),
+        date:  localStorage.getItem('travel_api_date') || '',
+        DAILY_LIMIT: 100  // self-imposed safety limit, well under 5000
+    },
 
     /**
      * MOVIES - Real-time TMDB Search or Discover
@@ -215,9 +222,7 @@ const ApiClient = {
 
     /**
      * ============================================================
-     * ZERO-TOLERANCE ADULT CONTENT SAFETY FILTER
-     * Blocks all nude, adult, and explicit content and subcategories
-     * Safe for professional and public-facing environments
+     * SAFETY FILTER — Zero tolerance adult content block
      * ============================================================
      */
     _isSafeTravelContent(text) {
@@ -225,7 +230,6 @@ const ApiClient = {
         const low = text.toLowerCase();
 
         const blockedPatterns = [
-            // Nudity & explicit content
             /\bnude(s|ism|ist)?\b/,
             /\bnaturis(m|t)\b/,
             /\bporn(o|ography)?\b/,
@@ -235,8 +239,6 @@ const ApiClient = {
             /\berotic(a)?\b/,
             /\bsensual\b/,
             /\bsexual\b/,
-
-            // Adult services
             /\bescort(s|ing)?\b/,
             /\bprostitut(e|ion|ed)\b/,
             /\bbrothel\b/,
@@ -246,16 +248,12 @@ const ApiClient = {
             /\bcam\s*girl\b/,
             /\bonlyfans\b/,
             /\bred.?light\s*district\b/,
-
-            // Adult entertainment
             /\badult\s*(club|bar|show|lounge|content|entertainment|resort|venue)\b/,
             /\bfetish\b/,
             /\bkink(y)?\b/,
             /\bbdsm\b/,
             /\bswinger(s)?\b/,
             /\borgy\b/,
-
-            // Nightlife adult-only
             /\bgo.?go\s*(bar|girl|boy)\b/,
             /\bpussy\b/,
             /\bsex\s*(club|show|tour|worker|industry|bar|beach)\b/,
@@ -267,68 +265,109 @@ const ApiClient = {
 
     /**
      * ============================================================
-     * TRAVEL - Real-Time Verified Source Destination Search
+     * DAILY BUDGET GUARD — stops runaway API calls
+     * ============================================================
+     */
+    _checkCallBudget() {
+        const today = new Date().toDateString();
+
+        // Reset counter if it's a new day
+        if (this._apiCallTracker.date !== today) {
+            this._apiCallTracker.count = 0;
+            this._apiCallTracker.date  = today;
+            localStorage.setItem('travel_api_calls', '0');
+            localStorage.setItem('travel_api_date',  today);
+        }
+
+        if (this._apiCallTracker.count >= this._apiCallTracker.DAILY_LIMIT) {
+            console.warn('[Travel] Daily API budget of 100 reached — serving cache only');
+            return false;
+        }
+
+        this._apiCallTracker.count++;
+        localStorage.setItem('travel_api_calls', String(this._apiCallTracker.count));
+        console.log(`[Travel] API call #${this._apiCallTracker.count} of ${this._apiCallTracker.DAILY_LIMIT} today`);
+        return true;
+    },
+
+    /**
+     * ============================================================
+     * TRAVEL — Real-time OpenTripMap destination search
      *
-     * Categories:
+     * Categories (must match TravelScraperEngine.java exactly):
      *   - Relaxing Vacation
      *   - Adventure & Sports
      *   - Cultural Discovery
      *   - Food & Nightlife
-     *
-     * Backend should route to TripAdvisor Content API
-     * or RapidAPI Travel endpoints (see backend section below)
      * ============================================================
      */
     async getTravel(purpose = 'Relaxing Vacation', searchQuery = '') {
 
-        /**
-         * Professionally curated query terms per category.
-         * These are single geographic location names exclusively so that
-         * the OpenTripMap /geoname API endpoint can successfully parse them.
-         */
+        // ✅ Bug 1 Fixed — keys now exactly match TravelScraperEngine.java switch cases
         const purposeQueryMap = {
-            'Vacation': [
-                'Maldives', 'Bora Bora', 'Seychelles', 'Fiji', 'Mykonos', 'Maui'
+            'Relaxing Vacation': [
+                'Maldives', 'Bora Bora', 'Seychelles',
+                'Fiji', 'Mykonos', 'Maui'
             ],
-            'Adventure': [
-                'Queenstown', 'Chamonix', 'Banff', 'Patagonia', 'Zermatt', 'Moab'
+            'Adventure & Sports': [
+                'Queenstown', 'Chamonix', 'Banff',
+                'Patagonia', 'Zermatt', 'Moab'
             ],
-            'Culture': [
-                'Rome', 'Kyoto', 'Athens', 'Machu Picchu', 'Petra', 'Cairo'
+            'Cultural Discovery': [
+                'Rome', 'Kyoto', 'Athens',
+                'Cairo', 'Petra', 'Istanbul'
             ],
-            'Food': [
-                'Tokyo', 'New Orleans', 'Bangkok', 'Osaka', 'Ibiza', 'Miami'
+            'Food & Nightlife': [
+                'Tokyo', 'Bangkok', 'Osaka',
+                'New Orleans', 'Barcelona', 'Mumbai'
             ]
         };
 
-        // Pick a rotating query variant to avoid stale cached results
+        // Pick random destination from the correct category
         const queryList = purposeQueryMap[purpose] || ['Paris', 'London', 'Dubai'];
         const autoQuery = queryList[Math.floor(Math.random() * queryList.length)];
 
-        // Prefer user's explicit search term, fall back to smart auto query
-        const term = (searchQuery && searchQuery.trim() !== '') ? searchQuery.trim() : autoQuery;
+        // User's explicit search always takes priority
+        const term = (searchQuery && searchQuery.trim() !== '')
+            ? searchQuery.trim()
+            : autoQuery;
 
-        console.log(`[Travel] Fetch → purpose="${purpose}" | query="${term}"`);
-        
-        // Cache Check
+        console.log(`[Travel] Request → purpose="${purpose}" | query="${term}"`);
+
+        // ─────────────────────────────────────────
+        // CACHE CHECK — return instantly if available
+        // ─────────────────────────────────────────
         const cacheKey = `${purpose}_${term}`.toLowerCase().trim();
         if (this._travelCache[cacheKey]) {
-            console.log(`[Travel] Returning instantly cached results for "${cacheKey}"`);
+            console.log(`[Travel] Cache hit → "${cacheKey}" (no API call made)`);
             return this._travelCache[cacheKey];
         }
 
+        // ─────────────────────────────────────────
+        // BUDGET CHECK — stop if daily limit reached
+        // ─────────────────────────────────────────
+        if (!this._checkCallBudget()) {
+            return [];
+        }
+
+        // ─────────────────────────────────────────
+        // VISIBILITY CHECK — don't call if tab is hidden
+        // ─────────────────────────────────────────
+        if (document.hidden) {
+            console.log('[Travel] Tab not visible — skipping API call');
+            return [];
+        }
+
         try {
-            /**
-             * Cache-bust every call so backend always fetches fresh live data.
-             * Pass source=tripadvisor so your backend knows which scraper to use.
-             */
+            // ✅ Bug 3 Fixed — removed Date.now() cache buster since we manage
+            //    freshness ourselves via the cache object above
+            // ✅ Bug 4 Fixed — source changed from 'tripadvisor' to 'opentripmap'
             const params = new URLSearchParams({
                 query:   term,
                 purpose: purpose,
-                source:  'tripadvisor',   // ← tells backend which verified source to use
+                source:  'opentripmap',  // ✅ matches your actual backend engine
                 lang:    'en',
-                limit:   '12',            // request 12, show 9 after dedup + filter
-                _:       Date.now()       // cache-buster
+                limit:   '12'
             });
 
             const response = await fetch(
@@ -336,28 +375,32 @@ const ApiClient = {
                 {
                     method: 'GET',
                     headers: {
-                        'Cache-Control': 'no-cache, no-store, must-revalidate',
-                        'Pragma':        'no-cache',
-                        'Accept':        'application/json'
+                        'Accept': 'application/json'
                     }
                 }
             );
 
             if (!response.ok) {
-                throw new Error(`[Travel] HTTP Error: ${response.status} ${response.statusText}`);
+                throw new Error(`HTTP ${response.status} ${response.statusText}`);
+            }
+
+            // ✅ Log remaining API calls from response headers
+            const remaining = response.headers.get('X-RateLimit-Requests-Remaining');
+            if (remaining) {
+                console.log(`[Travel] RapidAPI calls remaining today: ${remaining}`);
             }
 
             const results = await response.json();
             console.log(`[Travel] Raw results received: ${results.length}`);
 
-            // Step 1 — Apply zero-tolerance adult content safety filter
+            // Step 1 — Safety filter
             const safeResults = results.filter(dest =>
                 this._isSafeTravelContent(dest.place) &&
                 this._isSafeTravelContent(dest.description) &&
                 this._isSafeTravelContent(dest.type || '')
             );
 
-            // Step 2 — Deduplicate by place name (case-insensitive)
+            // Step 2 — Deduplicate by place name
             const seen = new Set();
             const deduplicated = safeResults.filter(dest => {
                 const key = (dest.place || '').toLowerCase().trim();
@@ -366,7 +409,7 @@ const ApiClient = {
                 return true;
             });
 
-            // Step 3 — Ensure minimum useful data exists on each result
+            // Step 3 — Validate minimum data fields
             const validated = deduplicated.filter(dest =>
                 dest.place &&
                 dest.place.trim() !== '' &&
@@ -375,7 +418,12 @@ const ApiClient = {
             );
 
             console.log(`[Travel] Final clean results: ${validated.length}`);
-            this._travelCache[cacheKey] = validated; // Save to cache before returning
+
+            // ✅ Save to cache — next call for same purpose+term is instant
+            if (validated.length > 0) {
+                this._travelCache[cacheKey] = validated;
+            }
+
             return validated;
 
         } catch (e) {
