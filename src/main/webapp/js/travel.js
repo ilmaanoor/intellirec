@@ -13,6 +13,14 @@ document.addEventListener('DOMContentLoaded', () => {
     updateBudgetBadge();
     loadTravel(currentPurpose, '');
 
+    // User Avatar Sync
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            const name = user.displayName || user.email.split('@')[0];
+            document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?background=F9A825&color=white&bold=true&name=${name}`;
+        }
+    });
+
     // Filter pill clicks
     document.querySelectorAll('.pill').forEach(pill => {
         pill.addEventListener('click', () => {
@@ -28,37 +36,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // Search button click
     document.getElementById('travelSearchBtn').addEventListener('click', () => {
         const val = document.getElementById('travelSearchInput').value.trim();
-        if (val.length > 0) {
-            currentQuery = val;
-            loadTravel(currentPurpose, currentQuery);
-        }
+        currentQuery = val;
+        loadTravel(currentPurpose, currentQuery);
     });
 
     // Search on Enter key
     document.getElementById('travelSearchInput').addEventListener('keydown', e => {
         if (e.key === 'Enter') {
             const val = e.target.value.trim();
-            if (val.length > 0) {
-                currentQuery = val;
-                loadTravel(currentPurpose, currentQuery);
-            }
-        }
-    });
-
-    // Debounced live search while typing
-    document.getElementById('travelSearchInput').addEventListener('input', e => {
-        clearTimeout(debounceTimer);
-        const val = e.target.value.trim();
-        if (val.length === 0) {
-            // Cleared — reload category defaults
-            currentQuery = '';
-            loadTravel(currentPurpose, '');
-            return;
-        }
-        debounceTimer = setTimeout(() => {
             currentQuery = val;
             loadTravel(currentPurpose, currentQuery);
-        }, 700);
+        }
     });
 
     // Close modal on overlay click
@@ -75,6 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
 // ─── Main Load Function ──────────────────────────────
 async function loadTravel(purpose, query) {
     console.log(`[Travel] Loading: ${purpose}, Query: "${query}"`);
+    const grid = document.getElementById('travel-grid');
+    
     showLoading(true);
     hideStates();
 
@@ -84,7 +74,7 @@ async function loadTravel(purpose, query) {
 
         showLoading(false);
 
-        // Budget check: if results is empty, check if it's due to budget
+        // Budget check
         const callCount = parseInt(localStorage.getItem('travel_api_calls') || '0');
         if (callCount >= 100) {
             console.error('[Travel] Daily budget of 100 calls reached.');
@@ -104,33 +94,27 @@ async function loadTravel(purpose, query) {
         updateHeader(results.length, purpose, query);
         updateBudgetBadge();
 
-        // Extra check for visibility
-        const grid = document.getElementById('travelGrid');
-        console.log(`[Travel] Grid visibility: ${grid.style.display}, Child count: ${grid.children.length}`);
+        console.log(`[Travel] Rendered children: ${grid.children.length}`);
 
     } catch (err) {
         showLoading(false);
-        showError('Could not load destinations: ' + err.message);
+        showError('Unable to load destinations. Please check your connection.');
         console.error('[Travel Page] Load error:', err);
     }
 }
 
 // ─── Render Cards ────────────────────────────────────
 function renderCards(destinations) {
-    const grid = document.getElementById('travelGrid');
+    const grid = document.getElementById('travel-grid');
     grid.innerHTML = '';
 
     destinations.forEach((dest, index) => {
         const card = document.createElement('div');
         card.className = 'travel-card';
-        card.style.animationDelay = `${index * 60}ms`;
 
-        // Star rating display (out of 10 → show out of 5 visually)
         const ratingNum  = parseFloat(dest.rating) || 0;
         const starsHtml  = buildStars(ratingNum);
-        const typeBadge  = dest.type
-            ? `<span class="card-type-badge">${dest.type}</span>`
-            : '';
+        const typeBadge  = dest.type ? `<span class="card-type-badge">${dest.type}</span>` : '';
 
         card.innerHTML = `
             <div class="card-img-wrap">
@@ -139,7 +123,7 @@ function renderCards(destinations) {
                     alt="${escapeHtml(dest.place)}"
                     loading="lazy"
                     onerror="this.src='https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800'"
-                />
+                >
                 <div class="card-img-overlay">
                     ${typeBadge}
                     <div class="card-rating">
@@ -151,20 +135,13 @@ function renderCards(destinations) {
             <div class="card-body">
                 <h3 class="card-title">${escapeHtml(dest.place)}</h3>
                 <div class="card-stars">${starsHtml}</div>
-                <p class="card-desc">${escapeHtml(truncate(dest.description, 100))}</p>
+                <p class="card-desc">${escapeHtml(truncate(dest.description, 120))}</p>
                 <div class="card-footer">
-                    <button
-                        class="card-details-btn"
-                        onclick='openModal(${JSON.stringify(dest)})'
-                    >
-                        <i class="fa-solid fa-circle-info"></i> Details
+                    <button class="card-details-btn" onclick='showDetails(${JSON.stringify(dest).replace(/'/g, "&apos;")})'>
+                        View Details
                     </button>
-                    <a
-                        href="${dest.exploreUrl || dest.tripadvisorUrl || '#'}"
-                        target="_blank"
-                        class="card-explore-btn"
-                    >
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Explore
+                    <a href="${dest.exploreUrl || dest.tripadvisorUrl || '#'}" target="_blank" class="card-explore-btn">
+                        Explore
                     </a>
                 </div>
             </div>
@@ -175,13 +152,13 @@ function renderCards(destinations) {
 }
 
 // ─── Modal ───────────────────────────────────────────
-function openModal(dest) {
-    document.getElementById('modalImg').src        = dest.img;
-    document.getElementById('modalTitle').textContent   = dest.place;
-    document.getElementById('modalRating').textContent  = dest.rating || 'N/A';
-    document.getElementById('modalType').textContent    = dest.type   || 'Attraction';
-    document.getElementById('modalDesc').textContent    = dest.description;
-    document.getElementById('modalExploreBtn').href     = dest.exploreUrl || dest.tripadvisorUrl || '#';
+function showDetails(dest) {
+    document.getElementById('modalImg').src = dest.img;
+    document.getElementById('modalTitle').textContent = dest.place;
+    document.getElementById('modalRating').textContent = dest.rating || 'N/A';
+    document.getElementById('modalType').textContent = dest.type || 'Attraction';
+    document.getElementById('modalDesc').textContent = dest.description;
+    document.getElementById('modalExploreBtn').href = dest.exploreUrl || dest.tripadvisorUrl || '#';
 
     document.getElementById('destModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
@@ -194,8 +171,8 @@ function closeModal() {
 
 // ─── UI Helpers ──────────────────────────────────────
 function showLoading(show) {
-    document.getElementById('travelLoading').style.display = show ? 'flex' : 'none';
-    document.getElementById('travelGrid').style.display    = show ? 'none' : 'grid';
+    document.getElementById('travelLoading').style.display = show ? 'block' : 'none';
+    document.getElementById('travel-grid').style.display   = show ? 'none' : 'grid';
 }
 
 function hideStates() {
@@ -205,8 +182,8 @@ function hideStates() {
 
 function showError(msg) {
     document.getElementById('travelErrorMsg').textContent = msg;
-    document.getElementById('travelError').style.display  = 'flex';
-    document.getElementById('travelGrid').style.display   = 'none';
+    document.getElementById('travelError').style.display  = 'block';
+    document.getElementById('travel-grid').style.display  = 'none';
 }
 
 function retrySearch() {
@@ -214,10 +191,8 @@ function retrySearch() {
 }
 
 function updateHeader(count, purpose, query) {
-    document.getElementById('resultsCount').textContent =
-        count > 0 ? `${count} destinations found` : '';
-    document.getElementById('resultsPurpose').textContent =
-        query ? `for "${query}"` : `· ${purpose}`;
+    document.getElementById('resultsCount').textContent = count > 0 ? `${count} destinations found` : '';
+    document.getElementById('resultsPurpose').textContent = query ? `for "${query}"` : `· ${purpose}`;
 }
 
 function updateBudgetBadge() {
@@ -227,13 +202,12 @@ function updateBudgetBadge() {
 }
 
 function buildStars(ratingOutOf10) {
-    // Convert 0-10 to 0-5 for star display
     const stars = Math.round((ratingOutOf10 / 10) * 5 * 2) / 2;
     let html = '';
     for (let i = 1; i <= 5; i++) {
-        if (stars >= i)       html += '<i class="fa-solid fa-star"></i>';
-        else if (stars >= i - 0.5) html += '<i class="fa-regular fa-star-half-stroke"></i>';
-        else                  html += '<i class="fa-regular fa-star"></i>';
+        if (stars >= i) html += '<i class="fa-solid fa-star"></i>';
+        else if (stars >= i - 0.5) html += '<i class="fa-solid fa-star-half-stroke"></i>';
+        else html += '<i class="fa-regular fa-star"></i>';
     }
     return html;
 }
@@ -245,9 +219,5 @@ function truncate(str, maxLen) {
 
 function escapeHtml(str) {
     if (!str) return '';
-    return str
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
